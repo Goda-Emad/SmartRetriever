@@ -1,1 +1,509 @@
+/* app/styles/custom.css */
+/* 🎨 تنسيقات مخصصة لتطبيق ProcureMind-AI */
 
+/* ============================================================
+   1. تنسيقات عامة
+   ============================================================ */
+
+/* تحسين الخطوط */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+* {
+    font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* تنسيق الصفحة الرئيسية */
+.main {
+    padding: 0 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   2. تنسيق القائمة الجانبية (Sidebar)
+   ============================================================ */
+
+/* خلفية القائمة الجانبية */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    border-right: 1px solid #334155;
+}
+
+[data-testid="stSidebar"] .stMarkdown {
+    color: #e2e8f0;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: #f8fafc !important;
+}
+
+[data-testid="stSidebar"] .stButton button {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+[data-testid="stSidebar"] .stButton button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+[data-testid="stSidebar"] .stMetric {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-testid="stSidebar"] .stMetric label {
+    color: #94a3b8 !important;
+}
+
+[data-testid="stSidebar"] .stMetric .stMetricValue {
+    color: #f8fafc !important;
+}
+
+/* ============================================================
+   3. تنسيق المحادثة (Chat)
+   ============================================================ */
+
+/* فقاعات المحادثة */
+[data-testid="stChatMessage"] {
+    border-radius: 12px !important;
+    padding: 0.5rem 1rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* رسالة المستخدم */
+[data-testid="stChatMessage"][data-testid="user"] {
+    background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+    color: white !important;
+    border-bottom-right-radius: 4px !important;
+}
+
+/* رسالة المساعد */
+[data-testid="stChatMessage"][data-testid="assistant"] {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-bottom-left-radius: 4px !important;
+    border: 1px solid #334155 !important;
+}
+
+/* مدخل النص */
+[data-testid="stChatInput"] {
+    border-radius: 12px !important;
+    border: 2px solid #334155 !important;
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+}
+
+[data-testid="stChatInput"]:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+}
+
+[data-testid="stChatInput"] input {
+    color: #e2e8f0 !important;
+}
+
+[data-testid="stChatInput"] input::placeholder {
+    color: #64748b !important;
+}
+
+/* ============================================================
+   4. تنسيق الأزرار
+   ============================================================ */
+
+/* الأزرار الرئيسية */
+.stButton button {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.stButton button[kind="primary"] {
+    background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.stButton button[kind="primary"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+}
+
+.stButton button[kind="secondary"] {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #334155 !important;
+}
+
+.stButton button[kind="secondary"]:hover {
+    background: #334155 !important;
+}
+
+/* أزرار الحذف */
+.stButton button[kind="danger"] {
+    background: #dc2626 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.stButton button[kind="danger"]:hover {
+    background: #b91c1c !important;
+}
+
+/* ============================================================
+   5. تنسيق الأكورديون (Expander)
+   ============================================================ */
+
+[data-testid="stExpander"] {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stExpander"] summary {
+    color: #e2e8f0 !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+    color: #2563eb !important;
+}
+
+/* ============================================================
+   6. تنسيق الجداول
+   ============================================================ */
+
+[data-testid="stTable"] {
+    background: #0f172a !important;
+    border-radius: 10px !important;
+    border: 1px solid #334155 !important;
+}
+
+[data-testid="stTable"] thead th {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #334155 !important;
+}
+
+[data-testid="stTable"] tbody td {
+    color: #e2e8f0 !important;
+    border-bottom: 1px solid #1e293b !important;
+}
+
+[data-testid="stTable"] tbody tr:hover {
+    background: #1e293b !important;
+}
+
+/* ============================================================
+   7. تنسيق الرسوم البيانية (Plotly)
+   ============================================================ */
+
+.js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .cartesianlayer {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .gridlayer path {
+    stroke: #334155 !important;
+}
+
+.js-plotly-plot .plotly .xtick text,
+.js-plotly-plot .plotly .ytick text {
+    fill: #94a3b8 !important;
+}
+
+/* ============================================================
+   8. تنسيق البطاقات والمعلومات
+   ============================================================ */
+
+/* بطاقات المعلومات */
+.stMetric {
+    background: #0f172a !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    border: 1px solid #334155 !important;
+}
+
+.stMetric label {
+    color: #94a3b8 !important;
+}
+
+.stMetric .stMetricValue {
+    color: #f8fafc !important;
+}
+
+.stMetric .stMetricDelta {
+    color: #10b981 !important;
+}
+
+/* ============================================================
+   9. تنسيق الأخطاء والتنبيهات
+   ============================================================ */
+
+/* رسائل الخطأ */
+[data-testid="stException"] {
+    background: #7f1d1d !important;
+    border: 1px solid #dc2626 !important;
+    border-radius: 10px !important;
+    color: #fca5a5 !important;
+}
+
+/* رسائل النجاح */
+[data-testid="stSuccess"] {
+    background: #064e3b !important;
+    border: 1px solid #10b981 !important;
+    border-radius: 10px !important;
+    color: #6ee7b7 !important;
+}
+
+/* رسائل التحذير */
+[data-testid="stWarning"] {
+    background: #451a03 !important;
+    border: 1px solid #f59e0b !important;
+    border-radius: 10px !important;
+    color: #fcd34d !important;
+}
+
+/* رسائل المعلومات */
+[data-testid="stInfo"] {
+    background: #172554 !important;
+    border: 1px solid #2563eb !important;
+    border-radius: 10px !important;
+    color: #93c5fd !important;
+}
+
+/* ============================================================
+   10. تنسيق الأقسام والفاصل
+   ============================================================ */
+
+/* الفاصل الأفقي */
+hr {
+    border: none !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, transparent, #2563eb, #7c3aed, transparent) !important;
+    margin: 2rem 0 !important;
+}
+
+/* ============================================================
+   11. تنسيق الصفحات الفرعية
+   ============================================================ */
+
+/* رأس الصفحة */
+.page-header {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    color: #f8fafc;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.page-header p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+/* ============================================================
+   12. تنسيق شريط التقدم
+   ============================================================ */
+
+[data-testid="stProgress"] {
+    background: #1e293b !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+[data-testid="stProgress"] > div {
+    background: linear-gradient(90deg, #2563eb, #7c3aed) !important;
+    border-radius: 10px !important;
+}
+
+/* ============================================================
+   13. تنسيق علامات التبويب
+   ============================================================ */
+
+[data-testid="stTabs"] {
+    background: #0f172a !important;
+    border-radius: 10px !important;
+    padding: 0.5rem !important;
+}
+
+[data-testid="stTabs"] button {
+    color: #94a3b8 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stTabs"] button[aria-selected="true"] {
+    background: #2563eb !important;
+    color: white !important;
+}
+
+[data-testid="stTabs"] button:hover {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+/* ============================================================
+   14. تنسيق الملفات المرفوعة
+   ============================================================ */
+
+[data-testid="stFileUploader"] {
+    background: #0f172a !important;
+    border: 2px dashed #334155 !important;
+    border-radius: 12px !important;
+    padding: 2rem !important;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: #2563eb !important;
+}
+
+/* ============================================================
+   15. تنسيق للموبايل (Responsive)
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .main {
+        padding: 0 0.5rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    [data-testid="stMetric"] {
+        padding: 0.5rem !important;
+    }
+    
+    [data-testid="stChatMessage"] {
+        padding: 0.5rem !important;
+    }
+}
+
+/* ============================================================
+   16. تنسيقات إضافية - شاشة الترحيب
+   ============================================================ */
+
+/* تنسيق المركز */
+.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    text-align: center;
+}
+
+.centered h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.centered p {
+    color: #94a3b8;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+}
+
+/* ============================================================
+   17. تنسيقات المصادر
+   ============================================================ */
+
+.source-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    transition: all 0.3s ease;
+}
+
+.source-card:hover {
+    border-color: #2563eb;
+    transform: translateX(5px);
+}
+
+.source-card .source-name {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.source-card .source-score {
+    color: #10b981;
+    font-size: 0.9rem;
+}
+
+.source-card .source-preview {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+/* ============================================================
+   18. تنسيقات الأسئلة المقترحة
+   ============================================================ */
+
+.suggested-question {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #94a3b8;
+}
+
+.suggested-question:hover {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    transform: scale(1.02);
+}
+
+/* ============================================================
+   19. تنسيقات الوضع الداكن (افتراضي)
+   ============================================================ */
+
+/* الخلفية العامة */
+.stApp {
+    background: #0f172a !important;
+}
+
+/* النصوص العامة */
+.stMarkdown, .stText {
+    color: #e2e8f0 !important;
+}
+
+/* الروابط */
+a {
+    color: #2563eb !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    color: #7c3aed !important;
+    text-decoration: underline !important;
+}
