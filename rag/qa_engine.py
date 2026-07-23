@@ -15,13 +15,13 @@ import time
 import hashlib
 from datetime import datetime
 
-from app.rag.retriever import Retriever
-from app.rag.reranker import Reranker
-from app.rag.chunking import Chunking, Chunk
-from app.llm.grok_client import GrokClient
-from app.core.config import settings
-from app.core.prompts import get_rag_prompt, get_system_prompt
-from app.utils.logger import logger
+from rag.retriever import Retriever
+from rag.reranker import Reranker
+from rag.chunking import Chunking, Chunk
+from llm.groq_client import GroqClient
+from core.config import settings
+from core.prompts import get_rag_prompt, get_system_prompt
+from utils.logger import logger
 
 
 @dataclass
