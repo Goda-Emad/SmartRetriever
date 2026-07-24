@@ -19,8 +19,8 @@ except ImportError:
     CROSS_ENCODER_AVAILABLE = False
     print("⚠️ CrossEncoder not available. Using simple reranking.")
 
-from app.utils.logger import logger
-from app.core.config import settings
+from utils.logger import logger
+from core.config import settings
 
 
 @dataclass
