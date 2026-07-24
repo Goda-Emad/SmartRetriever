@@ -2,7 +2,7 @@
 """
 📊 صفحة التحليلات والإحصائيات - Analytics Page
 
-تعرض إحصائيات وتحليلات النظام والمستندات والموردين
+تعرض إحصائيات وتحليلات النظام والمستندات والموردين مع دعم الثيمين الفاتح والداكن
 """
 
 import streamlit as st
@@ -11,42 +11,99 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 
-# إضافة المجلد الحالي إلى المسار
+# إضافة المجلد الرئيسي إلى مسار النظام
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core.config import settings
 from database.faiss_loader import FAISSLoader
 from utils.logger import logger
+from components.sidebar import render_sidebar
 
 
 # ============================================================
-# ✅ تحميل التنسيقات (CSS)
+# 🌐 قاموس اللغات لصفحة التحليلات
 # ============================================================
-
-def load_css():
-    """تحميل ملف التنسيقات المخصص"""
-    css_file = Path(__file__).parent.parent / "styles" / "custom.css"
-    if css_file.exists():
-        with open(css_file, "r", encoding="utf-8") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    else:
-        logger.warning(f"⚠️ CSS file not found: {css_file}")
+TRANSLATIONS = {
+    "ar": {
+        "title": "📊 التحليلات والإحصائيات",
+        "subtitle": "نظرة عامة شاملة على المستندات، الموردين، العقود وجودة البيانات",
+        "docs_total": "📄 إجمالي المستندات",
+        "categories_cnt": "📁 التصنيفات",
+        "total_size": "💾 الحجم الإجمالي",
+        "suppliers_cnt": "🏢 الموردين",
+        "cat_dist": "📊 توزيع المستندات حسب التصنيف",
+        "file_types": "📂 أنواع الملفات",
+        "size_dist": "📊 توزيع أحجام الملفات (KB)",
+        "supplier_analysis": "🏢 تحليل الموردين",
+        "docs_per_supplier": "📊 عدد المستندات لكل مورد",
+        "quality_analysis": "⭐ تحليل الجودة",
+        "avg_quality": "📊 متوسط درجة الجودة",
+        "best_supplier": "🏆 أفضل مورد",
+        "quality_scores_title": "⭐ درجات الجودة لكل مورد",
+        "contract_analysis": "💰 تحليل العقود",
+        "contract_values_title": "💰 قيم العقود لكل مورد",
+        "system_info": "⚙️ معلومات النظام",
+        "paths": "📁 المسارات",
+        "settings": "🔧 الإعدادات",
+        "index_status": "📊 حالة الفهرس",
+        "no_docs": "📭 لا توجد مستندات متاحة للتحليل حالياً"
+    },
+    "en": {
+        "title": "📊 Analytics & Statistics",
+        "subtitle": "Comprehensive overview of documents, suppliers, contracts, and data quality",
+        "docs_total": "📄 Total Documents",
+        "categories_cnt": "📁 Categories",
+        "total_size": "💾 Total Size",
+        "suppliers_cnt": "🏢 Suppliers",
+        "cat_dist": "📊 Document Distribution by Category",
+        "file_types": "📂 File Types",
+        "size_dist": "📊 File Size Distribution (KB)",
+        "supplier_analysis": "🏢 Supplier Analysis",
+        "docs_per_supplier": "📊 Documents Count per Supplier",
+        "quality_analysis": "⭐ Quality Analysis",
+        "avg_quality": "📊 Average Quality Score",
+        "best_supplier": "🏆 Top Supplier",
+        "quality_scores_title": "⭐ Quality Scores by Supplier",
+        "contract_analysis": "💰 Contract Analysis",
+        "contract_values_title": "💰 Contract Values by Supplier",
+        "system_info": "⚙️ System Information",
+        "paths": "📁 Paths",
+        "settings": "🔧 Settings",
+        "index_status": "📊 Index Status",
+        "no_docs": "📭 No documents available for analysis"
+    }
+}
 
 
 # ============================================================
-# 1. دوال مساعدة
+# 🎨 دالة ضبط ثيم الرسوم البيانية (Plotly Theme Adaptability)
+# ============================================================
+def update_chart_theme(fig, is_dark: bool):
+    """تعديل ألوان الرسم البياني من Plotly ليتناسب تلقائياً مع الثيم الحالي"""
+    font_color = "#F8FAFC" if is_dark else "#0F172A"
+    grid_color = "rgba(255, 255, 255, 0.1)" if is_dark else "#E2E8F0"
+    
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color=font_color, family="Inter, system-ui, sans-serif"),
+        xaxis=dict(gridcolor=grid_color, zerolinecolor=grid_color, title_font=dict(color=font_color)),
+        yaxis=dict(gridcolor=grid_color, zerolinecolor=grid_color, title_font=dict(color=font_color)),
+        legend=dict(font=dict(color=font_color)),
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    return fig
+
+
+# ============================================================
+# 1. دوال استخراج واستعلام البيانات
 # ============================================================
 
 def get_documents_stats():
-    """
-    الحصول على إحصائيات المستندات
-    
-    Returns:
-        dict: إحصائيات المستندات
-    """
+    """الحصول على إحصائيات المستندات والمجلدات"""
     kb_path = settings.KNOWLEDGE_BASE_PATH
     stats = {
         "total": 0,
@@ -81,18 +138,8 @@ def get_documents_stats():
 
 
 def get_suppliers_from_filenames(documents):
-    """
-    استخراج أسماء الموردين من أسماء الملفات
-    
-    Args:
-        documents: قائمة المستندات
-        
-    Returns:
-        list: قائمة الموردين
-    """
+    """استخراج أسماء الموردين والإحصائيات المرتبطة بهم"""
     suppliers = {}
-    
-    # أنماط للبحث عن الموردين
     patterns = [
         r'Supplier_([A-Za-z]+)',
         r'Supplier_([A-Za-z]+_[A-Za-z]+)',
@@ -125,52 +172,29 @@ def get_suppliers_from_filenames(documents):
 
 
 def get_quality_scores(documents):
-    """
-    استخراج درجات الجودة من الملفات
-    
-    Args:
-        documents: قائمة المستندات
-        
-    Returns:
-        list: قائمة درجات الجودة
-    """
+    """استخراج تقييمات الجودة المتاحة من أسماء الملفات"""
     scores = []
-    
     for doc in documents:
-        if "quality" in doc["category"] or "Quality" in doc["filename"]:
-            # محاولة استخراج درجة الجودة من اسم الملف
+        if "quality" in doc["category"].lower() or "quality" in doc["filename"].lower():
             match = re.search(r'(\d+)', doc["filename"])
             if match:
                 score = int(match.group(1))
                 if score <= 100:
-                    # استخراج اسم المورد من اسم الملف
                     supplier_name = doc["filename"].replace('_Quality_Report_', '').replace('.docx', '')
-                    # تنظيف الاسم إذا كان يحتوي على أرقام
                     supplier_name = re.sub(r'^\d+_', '', supplier_name)
                     scores.append({
                         "supplier": supplier_name,
                         "score": score,
                         "category": doc["category"]
                     })
-    
     return scores
 
 
 def get_contract_values(documents):
-    """
-    استخراج قيم العقود من الملفات
-    
-    Args:
-        documents: قائمة المستندات
-        
-    Returns:
-        list: قائمة قيم العقود
-    """
+    """استخراج قيم العقود المالية المتاحة"""
     contracts = []
-    
     for doc in documents:
-        if "contract" in doc["category"] or "Contract" in doc["filename"]:
-            # محاولة استخراج القيمة من اسم الملف
+        if "contract" in doc["category"].lower() or "contract" in doc["filename"].lower():
             match = re.search(r'(\d+[,\d]*\.?\d*)', doc["filename"])
             if match:
                 try:
@@ -184,104 +208,94 @@ def get_contract_values(documents):
                             "value": value,
                             "category": doc["category"]
                         })
-                except:
+                except Exception:
                     pass
-    
     return contracts
 
 
 # ============================================================
-# 2. عرض الصفحة
+# 2. عرض واجهة الصفحة (Show Page)
 # ============================================================
 
 def show():
-    """عرض صفحة التحليلات"""
+    """عرض صفحة التحليلات مع التوافق التام مع الثيم الفاتح والداكن"""
     
-    # ✅ تحميل التنسيقات أولاً
-    load_css()
-    
-    st.title("📊 التحليلات والإحصائيات")
-    st.caption("نظرة عامة على النظام والمستندات والموردين")
-    
-    st.divider()
-    
-    # ============================================================
-    # 1. جلب البيانات
-    # ============================================================
-    
+    # 1. جلب البيانات الأساسية أولاً
     stats = get_documents_stats()
     documents = stats["documents"]
+    suppliers = get_suppliers_from_filenames(documents)
+    quality_scores = get_quality_scores(documents)
     
-    # ============================================================
-    # 2. بطاقات الإحصائيات
-    # ============================================================
+    avg_quality_val = round(sum(s["score"] for s in quality_scores) / len(quality_scores), 1) if quality_scores else 0
+
+    # 2. عرض الشريط الجانبي وجلب اللغة الثابتة
+    sidebar_stats = {
+        "documents": stats["total"],
+        "suppliers": len(suppliers),
+        "contracts": len(get_contract_values(documents)),
+        "quality": avg_quality_val
+    }
+    lang_code = render_sidebar(stats=sidebar_stats)
+    T = TRANSLATIONS.get(lang_code, TRANSLATIONS["ar"])
     
+    # 3. تحديد هل التطبيق في الوضع الداكن؟
+    is_dark = st.session_state.get("dark_mode", True)
+
+    # 4. الترويسة الرئيسية المحسنة
+    st.markdown(f"""
+    <div class="doc-header" style="padding: 18px 24px; border-radius: 12px; margin-bottom: 20px;">
+        <h2 style="margin: 0 0 6px 0; font-weight: 800; font-size: 1.6rem;">{T['title']}</h2>
+        <p style="margin: 0; font-size: 0.9rem; opacity: 0.85;">{T['subtitle']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ============================================================
+    # 5. كروت الإحصائيات الرئيسية (Metrics Cards)
+    # ============================================================
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric(
-            "📄 إجمالي المستندات",
-            stats["total"],
-            delta="+2" if stats["total"] > 0 else "0"
-        )
-    
+        st.metric(T["docs_total"], stats["total"], delta="+2" if stats["total"] > 0 else "0")
     with col2:
-        st.metric(
-            "📁 التصنيفات",
-            len(stats["by_category"]),
-            delta=None
-        )
-    
+        st.metric(T["categories_cnt"], len(stats["by_category"]))
     with col3:
         total_size_mb = stats["total_size"] / (1024 * 1024)
-        st.metric(
-            "💾 الحجم الإجمالي",
-            f"{total_size_mb:.1f} MB",
-            delta=None
-        )
-    
+        st.metric(T["total_size"], f"{total_size_mb:.1f} MB")
     with col4:
-        suppliers = get_suppliers_from_filenames(documents)
-        st.metric(
-            "🏢 الموردين",
-            len(suppliers),
-            delta=None
-        )
-    
-    st.divider()
-    
+        st.metric(T["suppliers_cnt"], len(suppliers))
+
+    st.markdown("---")
+
     # ============================================================
-    # 3. الرسوم البيانية
+    # 6. الرسوم البيانية المتوافقة مع الثيم
     # ============================================================
     
-    # 3.1 توزيع المستندات حسب التصنيف
+    # 6.1 توزيع المستندات حسب التصنيف
     if stats["by_category"]:
         df_categories = pd.DataFrame({
             "التصنيف": list(stats["by_category"].keys()),
             "العدد": list(stats["by_category"].values())
         })
+        
         fig1 = px.pie(
             df_categories,
             names="التصنيف",
             values="العدد",
-            title="📊 توزيع المستندات حسب التصنيف",
-            color_discrete_sequence=px.colors.qualitative.Set3,
-            hole=0.3
+            title=f"<b>{T['cat_dist']}</b>",
+            color_discrete_sequence=px.colors.qualitative.Pastel if is_dark else px.colors.qualitative.Set2,
+            hole=0.4
         )
-        fig1.update_layout(
-            height=400,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.1)
-        )
+        fig1 = update_chart_theme(fig1, is_dark)
+        fig1.update_layout(height=380, showlegend=True, legend=dict(orientation="h", y=-0.1))
         st.plotly_chart(fig1, use_container_width=True)
     else:
-        st.info("📭 لا توجد مستندات للتحليل")
-    
-    # 3.2 أنواع الملفات
+        st.info(T["no_docs"])
+
+    # 6.2 أنواع الملفات وتوزيع الأحجام
     if stats["file_types"]:
-        col1, col2 = st.columns(2)
+        col_chart1, col_chart2 = st.columns(2)
         
-        with col1:
+        with col_chart1:
             df_filetypes = pd.DataFrame({
                 "نوع الملف": list(stats["file_types"].keys()),
                 "العدد": list(stats["file_types"].values())
@@ -290,37 +304,36 @@ def show():
                 df_filetypes,
                 x="نوع الملف",
                 y="العدد",
-                title="📂 أنواع الملفات",
-                color_discrete_sequence=["#2563EB"]
+                title=f"<b>{T['file_types']}</b>",
+                color_discrete_sequence=["#38BDF8" if is_dark else "#0284C7"]
             )
-            fig2.update_layout(height=300)
+            fig2 = update_chart_theme(fig2, is_dark)
+            fig2.update_layout(height=320)
             st.plotly_chart(fig2, use_container_width=True)
         
-        with col2:
-            # توزيع الأحجام
+        with col_chart2:
             if documents:
                 sizes = [doc["size"] / 1024 for doc in documents]
                 df_sizes = pd.DataFrame({"الحجم (KB)": sizes})
                 fig3 = px.histogram(
                     df_sizes,
                     x="الحجم (KB)",
-                    title="📊 توزيع أحجام الملفات (KB)",
+                    title=f"<b>{T['size_dist']}</b>",
                     nbins=10,
-                    color_discrete_sequence=["#10B981"]
+                    color_discrete_sequence=["#34D399" if is_dark else "#10B981"]
                 )
-                fig3.update_layout(height=300)
+                fig3 = update_chart_theme(fig3, is_dark)
+                fig3.update_layout(height=320)
                 st.plotly_chart(fig3, use_container_width=True)
-    
-    st.divider()
-    
+
+    st.markdown("---")
+
     # ============================================================
-    # 4. الموردين
+    # 7. قسم الموردين (Suppliers Section)
     # ============================================================
-    
     if suppliers:
-        st.subheader("🏢 تحليل الموردين")
+        st.subheader(T["supplier_analysis"])
         
-        # جدول الموردين
         suppliers_df = pd.DataFrame([
             {
                 "المورد": s["name"],
@@ -337,134 +350,116 @@ def show():
             hide_index=True
         )
         
-        # رسم بياني للموردين
         fig4 = px.bar(
             suppliers_df,
             x="المورد",
             y="المستندات",
-            title="📊 عدد المستندات لكل مورد",
-            color_discrete_sequence=["#8B5CF6"]
+            title=f"<b>{T['docs_per_supplier']}</b>",
+            color_discrete_sequence=["#A78BFA" if is_dark else "#7C3AED"]
         )
-        fig4.update_layout(height=350)
+        fig4 = update_chart_theme(fig4, is_dark)
+        fig4.update_layout(height=340)
         st.plotly_chart(fig4, use_container_width=True)
-    
-    st.divider()
-    
+
     # ============================================================
-    # 5. درجات الجودة (إن وجدت)
+    # 8. قسم الجودة (Quality Metrics)
     # ============================================================
-    
-    quality_scores = get_quality_scores(documents)
-    
     if quality_scores:
-        st.subheader("⭐ تحليل الجودة")
+        st.markdown("---")
+        st.subheader(T["quality_analysis"])
         
         scores_df = pd.DataFrame(quality_scores)
+        col_q1, col_q2 = st.columns(2)
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # متوسط درجات الجودة
-            avg_score = sum(s["score"] for s in quality_scores) / len(quality_scores)
+        with col_q1:
             st.metric(
-                "📊 متوسط درجة الجودة",
-                f"{avg_score:.1f}%",
-                delta="+5%" if avg_score > 80 else "0%"
+                T["avg_quality"],
+                f"{avg_quality_val}%",
+                delta="+5%" if avg_quality_val > 80 else "0%"
             )
         
-        with col2:
-            # أفضل مورد
+        with col_q2:
             best = max(quality_scores, key=lambda x: x["score"])
             st.metric(
-                "🏆 أفضل مورد",
+                T["best_supplier"],
                 best["supplier"],
                 delta=f"{best['score']}%"
             )
         
-        # رسم بياني لدرجات الجودة
         fig5 = px.bar(
             scores_df,
             x="supplier",
             y="score",
-            title="⭐ درجات الجودة لكل مورد",
+            title=f"<b>{T['quality_scores_title']}</b>",
             labels={"supplier": "المورد", "score": "درجة الجودة (%)"},
             color="score",
             color_continuous_scale="RdYlGn",
             range_color=[0, 100]
         )
-        fig5.update_layout(height=350)
+        fig5 = update_chart_theme(fig5, is_dark)
+        fig5.update_layout(height=340)
         st.plotly_chart(fig5, use_container_width=True)
-    
+
     # ============================================================
-    # 6. قيم العقود (إن وجدت)
+    # 9. قسم العقود (Contracts Section)
     # ============================================================
-    
     contracts = get_contract_values(documents)
-    
     if contracts:
-        st.subheader("💰 تحليل العقود")
+        st.markdown("---")
+        st.subheader(T["contract_analysis"])
         
         contracts_df = pd.DataFrame([
             {
                 "المورد": c["supplier"],
-                "القيمة (ريال)": c["value"],
+                "القيمة (SAR)": c["value"],
                 "التصنيف": c["category"]
             }
             for c in contracts
-        ])
+        ]).sort_values("القيمة (SAR)", ascending=False)
         
-        # ترتيب حسب القيمة
-        contracts_df = contracts_df.sort_values("القيمة (ريال)", ascending=False)
+        st.dataframe(contracts_df, use_container_width=True, hide_index=True)
         
-        st.dataframe(
-            contracts_df,
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        # رسم بياني للعقود
         fig6 = px.bar(
             contracts_df,
             x="المورد",
-            y="القيمة (ريال)",
-            title="💰 قيم العقود لكل مورد",
-            color_discrete_sequence=["#F59E0B"]
+            y="القيمة (SAR)",
+            title=f"<b>{T['contract_values_title']}</b>",
+            color_discrete_sequence=["#FBBF24" if is_dark else "#D97706"]
         )
-        fig6.update_layout(height=350)
+        fig6 = update_chart_theme(fig6, is_dark)
+        fig6.update_layout(height=340)
         st.plotly_chart(fig6, use_container_width=True)
-    
+
     # ============================================================
-    # 7. معلومات النظام
+    # 10. معلومات وإعدادات النظام
     # ============================================================
-    
-    with st.expander("⚙️ معلومات النظام", expanded=False):
-        col1, col2 = st.columns(2)
+    st.markdown("---")
+    with st.expander(T["system_info"], expanded=False):
+        col_sys1, col_sys2 = st.columns(2)
         
-        with col1:
-            st.markdown("**📁 المسارات:**")
-            st.code(f"قاعدة المعرفة: {settings.KNOWLEDGE_BASE_PATH}")
-            st.code(f"فهرس FAISS: {settings.FAISS_INDEX_PATH}")
-            st.code(f"بيانات: {settings.DATA_PATH}")
+        with col_sys1:
+            st.markdown(f"**{T['paths']}:**")
+            st.code(f"KNOWLEDGE_BASE: {settings.KNOWLEDGE_BASE_PATH}")
+            st.code(f"FAISS_INDEX: {settings.FAISS_INDEX_PATH}")
+            st.code(f"DATA_PATH: {settings.DATA_PATH}")
         
-        with col2:
-            st.markdown("**🔧 الإعدادات:**")
-            st.code(f"النموذج: {settings.EMBEDDING_MODEL}")
-            st.code(f"الجهاز: {settings.EMBEDDING_DEVICE}")
-            st.code(f"أبعاد المتجهات: {settings.EMBEDDING_DIMENSION}")
+        with col_sys2:
+            st.markdown(f"**{T['settings']}:**")
+            st.code(f"MODEL: {settings.EMBEDDING_MODEL}")
+            st.code(f"DEVICE: {settings.EMBEDDING_DEVICE}")
+            st.code(f"DIMENSION: {settings.EMBEDDING_DIMENSION}")
         
-        st.markdown("**📊 حالة الفهرس:**")
+        st.markdown(f"**{T['index_status']}:**")
         try:
             loader = FAISSLoader()
             index_info = loader.get_index_info()
-            st.code(f"الحالة: {index_info.get('status', 'غير معروف')}")
-            st.code(f"عدد المستندات: {index_info.get('total_vectors', 0)}")
+            st.code(f"Status: {index_info.get('status', 'Unknown')} | Total Vectors: {index_info.get('total_vectors', 0)}")
         except Exception as e:
-            st.warning(f"⚠️ لا يمكن قراءة حالة الفهرس: {str(e)}")
+            st.warning(f"⚠️ Index Loader Warning: {str(e)}")
 
 
 # ============================================================
-# 3. تشغيل الصفحة (إذا كانت مستقلة)
+# 3. تشغيل الصفحة عند الاستدعاء المباشر
 # ============================================================
-
 if __name__ == "__main__":
     show()
