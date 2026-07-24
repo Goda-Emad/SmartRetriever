@@ -61,11 +61,11 @@ class Settings:
     # ============================================================
 
     DEFAULT_TOP_K: int = int(get_secret("DEFAULT_TOP_K", "10"))
-    DEFAULT_MAX_SOURCES: int = int(get_secret("DEFAULT_MAX_SOURCES", "5"))
+    DEFAULT_MAX_SOURCES: int = int(get_secret("DEFAULT_MAX_SOURCES", "3"))
     DEFAULT_TEMPERATURE: float = float(get_secret("DEFAULT_TEMPERATURE", "0.7"))
     MIN_CONFIDENCE_SCORE: float = float(get_secret("MIN_CONFIDENCE_SCORE", "0.3"))
 
-    CHUNK_SIZE: int = int(get_secret("CHUNK_SIZE", "500"))
+    CHUNK_SIZE: int = int(get_secret("CHUNK_SIZE", "300"))
     CHUNK_OVERLAP: int = int(get_secret("CHUNK_OVERLAP", "50"))
     MIN_CHUNK_SIZE: int = int(get_secret("MIN_CHUNK_SIZE", "50"))
 
