@@ -24,6 +24,20 @@ from utils.logger import logger
 
 
 # ============================================================
+# ✅ تحميل التنسيقات (CSS)
+# ============================================================
+
+def load_css():
+    """تحميل ملف التنسيقات المخصص"""
+    css_file = Path(__file__).parent.parent / "styles" / "custom.css"
+    if css_file.exists():
+        with open(css_file, "r", encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    else:
+        logger.warning(f"⚠️ CSS file not found: {css_file}")
+
+
+# ============================================================
 # 1. تهيئة خدمة المحادثة
 # ============================================================
 
@@ -165,6 +179,9 @@ def display_suggested_questions():
 
 def show():
     """عرض صفحة المحادثة"""
+    
+    # ✅ تحميل التنسيقات أولاً
+    load_css()
     
     # تهيئة حالة الجلسة
     init_session_state()
