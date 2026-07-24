@@ -1,16 +1,13 @@
-# app/database/__init__.py
+# database/__init__.py
 """
 🗄️ وحدة قاعدة البيانات - Database Module
-
 تحتوي على جميع مكونات التعامل مع قواعد البيانات والفهارس
 """
-
 from .faiss_loader import FAISSLoader
 from .embeddings import Embeddings
 from .text_loader import TextLoader
 from .docx_loader import DocxLoader
 
-# تعريف ما يتم تصديره عند استيراد الوحدة
 __all__ = [
     'FAISSLoader',
     'Embeddings',
@@ -18,11 +15,9 @@ __all__ = [
     'DocxLoader'
 ]
 
-# معلومات الوحدة
 __version__ = "1.0.0"
-__description__ = "ProcureMind-AI Database Module - إدارة قواعد البيانات والفهارس"
+__description__ = "SmartRetriever Database Module - إدارة قواعد البيانات والفهارس"
 
-# وصف المكونات
 COMPONENTS = {
     "faiss_loader": "تحميل وإدارة فهرس FAISS",
     "embeddings": "توليد المتجهات (Embeddings) للنصوص",
@@ -30,7 +25,6 @@ COMPONENTS = {
     "docx_loader": "تحميل النصوص من ملفات .docx"
 }
 
-# أنواع الملفات المدعومة
 SUPPORTED_FILE_TYPES = {
     "txt": {
         "description": "ملفات نصية عادية",
@@ -44,7 +38,6 @@ SUPPORTED_FILE_TYPES = {
     }
 }
 
-# إعدادات قاعدة البيانات
 DATABASE_SETTINGS = {
     "faiss": {
         "index_path": "./faiss_index/index.faiss",
