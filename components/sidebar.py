@@ -1,14 +1,21 @@
 """
-📌 القائمة الجانبية - Modern SaaS Colored Cards Sidebar
+📌 القائمة الجانبية - Modern SaaS Sidebar Component
 """
 
 import streamlit as st
 from typing import Optional, Dict, Any
 
+# محاولة استيراد option_menu إذا كانت مثبتة في المشروع
+try:
+    from streamlit_option_menu import option_menu
+    HAS_OPTION_MENU = True
+except ImportError:
+    HAS_OPTION_MENU = False
+
 # ============================================================
-# ⚙️ إعدادات الصفحات بالترتيب المعتمد
+# ⚙️ أسماء الصفحات المعتمدة
 # ============================================================
-PAGES = {
+PAGES_MAP = {
     "HOME": "🏠",
     "المساعد الذكي": "💬",
     "المستندات": "📁",
@@ -19,63 +26,38 @@ DEFAULT_PAGE = "HOME"
 
 
 # ============================================================
-# 🎨 حقن CSS المطور للكاردات الملونة
+# 🎨 حقن CSS لتحسين المظهر
 # ============================================================
 def _inject_custom_css():
     st.markdown("""
         <style>
-        /* خلفية السايدبار الداكنة */
         [data-testid="stSidebar"] {
             background-color: #0B1120 !important;
         }
         
-        /* تصميم الأزرار العادية لتصبح كاردات أنيقة */
+        /* تنسيق أزرار Streamlit البديلة */
         [data-testid="stSidebar"] div.stButton > button {
             width: 100% !important;
-            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%) !important;
+            background: #1E293B !important;
             color: #F1F5F9 !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            border-radius: 12px !important;
-            padding: 0.7rem 1rem !important;
+            border-radius: 10px !important;
+            padding: 0.6rem 1rem !important;
             font-size: 0.95rem !important;
             font-weight: 700 !important;
-            transition: all 0.25s ease-in-out !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2) !important;
+            transition: all 0.2s ease-in-out !important;
             margin-bottom: 4px !important;
         }
         
-        /* تأثير عند تمرير الماوس فوق الكارد */
         [data-testid="stSidebar"] div.stButton > button:hover {
-            background: linear-gradient(135deg, #334155 0%, #1E293B 100%) !important;
             border-color: #38BDF8 !important;
             color: #38BDF8 !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 12px -2px rgba(56, 189, 248, 0.2) !important;
-        }
-        
-        /* تصميم الكارد الملون للصفحة النشطة (Active Page) */
-        [data-testid="stSidebar"] div.stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #4F46E5 0%, #2563EB 100%) !important;
-            color: #FFFFFF !important;
-            border: 1px solid #818CF8 !important;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4) !important;
+            transform: translateY(-1px) !important;
         }
 
-        /* أزرار التحكم العلوية (Dark/English) */
-        .control-btn div.stButton > button {
-            background: #1E293B !important;
-            border-radius: 10px !important;
-            padding: 0.4rem !important;
-            font-size: 0.85rem !important;
-        }
-
-        /* الفواصل الناعمة */
         [data-testid="stSidebar"] hr {
             border-color: rgba(255, 255, 255, 0.08) !important;
-            margin: 0.9rem 0 !important;
+            margin: 0.8rem 0 !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -91,12 +73,10 @@ def render_sidebar(
     show_stats: bool = False,
     show_navigation: bool = True
 ) -> str:
-    """عرض السايدبار بتصميم الكاردات الملونة بدون تكرار."""
+    """عرض القائمة الجانبية بالأسماء الجديدة والكاردات الملونة."""
     
-    # تطبيق التنسيقات
     _inject_custom_css()
 
-    # تهيئة حالة الجلسة
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = True
 
@@ -107,18 +87,68 @@ def render_sidebar(
         st.session_state.current_page = DEFAULT_PAGE
 
     with st.sidebar:
-        # ✅ 1. الهيدر (الشعار واسم المنصة)
+        # ✅ 1. كاردات التنقل بالأسماء الجديدة
+        if show_navigation:
+            options_list = ["HOME", "المساعد الذكي", "المستندات", "التحليلات"]
+            icons_list = ["house-door-fill", "chat-dots-fill", "file-earmark-text-fill", "bar-chart-line-fill"]
+
+            if HAS_OPTION_MENU:
+                # عرض القائمة باستخدام option_menu وتنسيقها داخل كاردات ملونة
+                selected_page = option_menu(
+                    menu_title=None,
+                    options=options_list,
+                    icons=icons_list,
+                    default_index=options_list.index(st.session_state.current_page) if st.session_state.current_page in options_list else 0,
+                    styles={
+                        "container": {"padding": "0!important", "background-color": "transparent"},
+                        "icon": {"color": "#38BDF8", "font-size": "16px"},
+                        "nav-link": {
+                            "font-size": "14px",
+                            "text-align": "right" if st.session_state.current_language == "العربية" else "left",
+                            "margin": "4px 0px",
+                            "color": "#94A3B8",
+                            "border-radius": "10px",
+                            "background-color": "#182232",
+                            "border": "1px solid rgba(255, 255, 255, 0.05)",
+                        },
+                        "nav-link-selected": {
+                            "background": "linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)",
+                            "color": "#FFFFFF",
+                            "font-weight": "bold",
+                            "border": "1px solid #60A5FA",
+                            "box-shadow": "0 0 12px rgba(37, 99, 235, 0.4)",
+                        },
+                    }
+                )
+                st.session_state.current_page = selected_page
+            else:
+                # بديل بحالة عدم استخدام option_menu
+                for page in options_list:
+                    icon = PAGES_MAP[page]
+                    is_active = (st.session_state.current_page == page)
+                    if st.button(
+                        f"{icon}   {page}",
+                        use_container_width=True,
+                        key=f"nav_card_{page}",
+                        type="primary" if is_active else "secondary"
+                    ):
+                        st.session_state.current_page = page
+                        st.rerun()
+
+            st.markdown("---")
+
+        # ✅ 2. الهيدر (SmartRetriever Auto)
         st.markdown("""
-        <div style="display: flex; align-items: center; gap: 12px; padding: 0.2rem 0 0.5rem 0;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 0.2rem 0;">
             <div style="
                 background: linear-gradient(135deg, #2563EB, #0284C7);
-                width: 44px;
-                height: 44px;
-                border-radius: 12px;
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 22px;
+                font-size: 20px;
                 border: 1px solid rgba(255,255,255,0.2);
                 box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
             ">
@@ -137,13 +167,11 @@ def render_sidebar(
 
         st.markdown("---")
 
-        # ✅ 2. أدوات التحكم العلوي (Dark Mode & Language)
+        # ✅ 3. الأزرار العلوية (Dark Mode / Language)
         if show_theme_toggle:
-            theme_icon = "🌙" if st.session_state.dark_mode else "☀️"
-            theme_label = f"{theme_icon} Dark" if st.session_state.dark_mode else f"{theme_icon} Light"
-            
             col1, col2 = st.columns(2)
             with col1:
+                theme_label = "🌙 Dark" if st.session_state.dark_mode else "☀️ Light"
                 if st.button(theme_label, use_container_width=True, key="btn_theme_toggle"):
                     st.session_state.dark_mode = not st.session_state.dark_mode
                     st.rerun()
@@ -156,32 +184,7 @@ def render_sidebar(
 
             st.markdown("---")
 
-        # ✅ 3. التنقل الرئيسي - كاردات ملونة احترافية (HOME, المساعد الذكي, المستندات, التحليلات)
-        if show_navigation:
-            st.markdown("""
-            <div style="margin-bottom: 0.6rem;">
-                <span style="font-size: 0.7rem; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 1.2px;">
-                    📌 التنقل الرئيسي
-                </span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            for page_name, icon in PAGES.items():
-                is_active = (st.session_state.current_page == page_name)
-                
-                # إنشاء الزر داخل كارد
-                if st.button(
-                    f"{icon}   {page_name}",
-                    use_container_width=True,
-                    key=f"nav_card_{page_name}",
-                    type="primary" if is_active else "secondary"
-                ):
-                    st.session_state.current_page = page_name
-                    st.rerun()
-
-            st.markdown("---")
-
-        # ✅ 4. الفوتر النهائي
+        # ✅ 4. الفوتر
         st.markdown("""
         <div style="padding-top: 0.2rem; font-size: 0.75rem; color: #64748B;">
             <div style="margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
@@ -199,7 +202,7 @@ def render_sidebar(
 
 
 # ============================================================
-# 2. الدوال المساعدة (تمنع خطأ Import)
+# 2. الدوال المساعدة المساندة
 # ============================================================
 
 def render_stats_only(stats: Dict[str, Any]) -> None:
@@ -228,8 +231,9 @@ def render_system_status(status: str = "🟢 Online", uptime: str = "99.9%") -> 
 
 
 # ============================================================
-# تصدير جميع الدوال
+# تصدير كافة الدوال
 # ============================================================
+
 __all__ = [
     'render_sidebar',
     'render_stats_only',
