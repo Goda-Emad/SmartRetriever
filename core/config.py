@@ -1,4 +1,4 @@
-# app/core/config.py
+# core/config.py
 """
 ⚙️ إعدادات التطبيق - Application Configuration
 
@@ -48,7 +48,8 @@ class Settings:
     # 📁 مسارات الملفات
     # ============================================================
 
-    BASE_DIR: Path = Path(__file__).parent.parent.parent
+    # ⚠️ ملحوظة: core/ دلوقتي في الروت مباشرة (مش جوه app/) لذلك parent.parent فقط
+    BASE_DIR: Path = Path(__file__).parent.parent
 
     KNOWLEDGE_BASE_PATH: Path = Path(get_secret("KNOWLEDGE_BASE_PATH", "./knowledge_base"))
     FAISS_INDEX_PATH: Path = Path(get_secret("FAISS_INDEX_PATH", "./faiss_index"))
@@ -239,7 +240,6 @@ def validate_settings():
             if not dir_path.exists():
                 dir_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            # على Streamlit Cloud بعض المسارات ممكن تكون read-only أو مؤقتة
             print(f"⚠️ تعذر إنشاء المجلد {dir_path}: {e}")
 
     if settings.is_production():
