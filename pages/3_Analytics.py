@@ -23,6 +23,20 @@ from utils.logger import logger
 
 
 # ============================================================
+# ✅ تحميل التنسيقات (CSS)
+# ============================================================
+
+def load_css():
+    """تحميل ملف التنسيقات المخصص"""
+    css_file = Path(__file__).parent.parent / "styles" / "custom.css"
+    if css_file.exists():
+        with open(css_file, "r", encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    else:
+        logger.warning(f"⚠️ CSS file not found: {css_file}")
+
+
+# ============================================================
 # 1. دوال مساعدة
 # ============================================================
 
@@ -182,6 +196,9 @@ def get_contract_values(documents):
 
 def show():
     """عرض صفحة التحليلات"""
+    
+    # ✅ تحميل التنسيقات أولاً
+    load_css()
     
     st.title("📊 التحليلات والإحصائيات")
     st.caption("نظرة عامة على النظام والمستندات والموردين")
@@ -364,7 +381,7 @@ def show():
                 delta=f"{best['score']}%"
             )
         
-        # رسم بياني لدرجات الجودة - ✅ تم الإصلاح
+        # رسم بياني لدرجات الجودة
         fig5 = px.bar(
             scores_df,
             x="supplier",
