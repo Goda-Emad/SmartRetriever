@@ -1,4 +1,3 @@
-# core/config.py
 """
 ⚙️ إعدادات التطبيق - Application Configuration
 
@@ -52,9 +51,12 @@ class Settings:
     BASE_DIR: Path = Path(__file__).parent.parent
 
     KNOWLEDGE_BASE_PATH: Path = Path(get_secret("KNOWLEDGE_BASE_PATH", "./knowledge_base"))
-    FAISS_INDEX_PATH: Path = Path(get_secret("FAISS_INDEX_PATH", "./faiss_index"))
+    FAISS_INDEX_PATH: Path = Path(get_secret("FAISS_INDEX_PATH", "./faiss_index"))  # ✅ سيتم إزالته لاحقاً
     DATA_PATH: Path = Path(get_secret("DATA_PATH", "./data"))
     LOGS_PATH: Path = Path(get_secret("LOGS_PATH", "./data/logs"))
+    
+    # ✅ مسار قاعدة بيانات Chroma (جديد)
+    CHROMA_PATH: Path = Path(get_secret("CHROMA_PATH", "./chroma_db"))
 
     # ============================================================
     # 📊 إعدادات RAG
@@ -174,6 +176,7 @@ class Settings:
             "base": self.BASE_DIR,
             "knowledge_base": self.KNOWLEDGE_BASE_PATH,
             "faiss_index": self.FAISS_INDEX_PATH,
+            "chroma_path": self.CHROMA_PATH,  # ✅ إضافة مسار Chroma
             "data": self.DATA_PATH,
             "logs": self.LOGS_PATH
         }
@@ -185,6 +188,7 @@ class Settings:
             "GROQ_API_URL": self.GROQ_API_URL,
             "KNOWLEDGE_BASE_PATH": str(self.KNOWLEDGE_BASE_PATH),
             "FAISS_INDEX_PATH": str(self.FAISS_INDEX_PATH),
+            "CHROMA_PATH": str(self.CHROMA_PATH),  # ✅ إضافة Chroma
             "DATA_PATH": str(self.DATA_PATH),
             "LOGS_PATH": str(self.LOGS_PATH),
             "DEFAULT_TOP_K": self.DEFAULT_TOP_K,
@@ -231,6 +235,7 @@ def validate_settings():
     directories = [
         settings.KNOWLEDGE_BASE_PATH,
         settings.FAISS_INDEX_PATH,
+        settings.CHROMA_PATH,  # ✅ إضافة Chroma
         settings.DATA_PATH,
         settings.LOGS_PATH
     ]
