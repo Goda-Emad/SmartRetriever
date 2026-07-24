@@ -8,10 +8,18 @@
 [theme]
 # الألوان الأساسية
 primaryColor = "#2563EB"              # اللون الأساسي (أزرق)
-backgroundColor = "#FFFFFF"           # لون الخلفية
-secondaryBackgroundColor = "#F8FAFC"  # لون الخلفية الثانوي
-textColor = "#1E293B"                 # لون النص
+backgroundColor = "#0F172A"           # لون الخلفية (أزرق غامق)
+secondaryBackgroundColor = "#1E293B"  # لون الخلفية الثانوي
+textColor = "#E2E8F0"                 # لون النص (أبيض مائل للرمادي)
+
+# ✅ إعدادات الخطوط
 font = "sans serif"                   # نوع الخط
+
+# ✅ تخصيص الألوان الإضافية
+[theme.custom]
+headerColor = "#F8FAFC"               # ✅ لون العناوين الرئيسية (أبيض)
+subheaderColor = "#94A3B8"            # ✅ لون العناوين الفرعية (رمادي فاتح)
+linkColor = "#60A5FA"                 # ✅ لون الروابط (أزرق فاتح)
 
 # ============================================================
 # 🖥️ إعدادات الخادم (Server)
