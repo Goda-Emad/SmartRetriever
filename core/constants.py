@@ -1,13 +1,31 @@
+# core/constants.py
 """
-📌 الثوابت الأساسية - Application Constants
+📌 الثوابت العامة للتطبيق - Application Constants
+
+قيم ثابتة يستخدمها التطبيق في أماكن متعددة، منفصلة عن الإعدادات
+القابلة للتغيير عبر متغيرات البيئة (core/config.py)
 """
+
+# ============================================================
+# 🖥️ معلومات التطبيق
+# ============================================================
 
 APP_NAME = "SmartRetriever"
 APP_VERSION = "1.0.0"
 
-SUPPORTED_FILE_TYPES = [".txt", ".docx", ".pdf"]
-FILE_EXTENSIONS = SUPPORTED_FILE_TYPES
-ALLOWED_EXTENSIONS = SUPPORTED_FILE_TYPES
+# ============================================================
+# 📄 أنواع الملفات المدعومة
+# ============================================================
+
+SUPPORTED_FILE_TYPES = [".docx", ".pdf", ".txt"]
+FILE_EXTENSIONS = [".docx", ".pdf", ".txt"]
+ALLOWED_EXTENSIONS = [".docx", ".pdf", ".txt"]
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+# ============================================================
+# 📊 إعدادات RAG الافتراضية
+# ============================================================
 
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_TOP_K = 10
@@ -15,11 +33,13 @@ DEFAULT_MAX_SOURCES = 5
 DEFAULT_TEMPERATURE = 0.7
 MIN_CONFIDENCE_SCORE = 0.3
 
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+# ============================================================
+# 📁 تصنيفات قاعدة المعرفة
+# ============================================================
 
 CATEGORIES = {
     "contracts": "العقود",
     "policies": "السياسات",
+    "quotations": "عروض الأسعار",
     "quality_reports": "تقارير الجودة",
-    "quotations": "عروض الأسعار"
 }
