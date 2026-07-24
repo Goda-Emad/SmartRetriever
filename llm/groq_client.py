@@ -1,7 +1,9 @@
+# llm/groq_client.py
 """
 🤖 عميل Groq API
 
 يتواصل مع واجهة Groq API لتوليد الإجابات على الأسئلة
+(Groq متوافق مع صيغة OpenAI Chat Completions)
 """
 
 import json
@@ -45,7 +47,6 @@ class GroqClient:
         self.model = model or settings.GROQ_MODEL
         self.timeout = timeout
 
-        # إحصائيات
         self.stats = {
             "total_requests": 0,
             "total_tokens": 0,
@@ -53,15 +54,17 @@ class GroqClient:
             "last_request_time": 0
         }
 
-        # إعدادات الطلب
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
 
-        # التحقق من وجود المفتاح
         if not self.api_key or self.api_key == "":
-            logger.warning("⚠️ GROQ_API_KEY not set! Please set it in .streamlit/secrets.toml or .env file")
+            logger.warning(
+                "⚠️ GROQ_API_KEY not set! "
+                "محليًا: أضفه في .streamlit/secrets.toml — "
+                "على Streamlit Cloud: أضفه من Manage app → Settings → Secrets"
+            )
 
         logger.info(f"🤖 Groq Client initialized with model: {self.model}")
 
@@ -97,20 +100,17 @@ class GroqClient:
 
         logger.info(f"🤖 Generating response for: {question[:50]}...")
 
-        # 1. التحقق من المفتاح
         if not self.api_key:
-            error_msg = "❌ GROQ_API_KEY not set. Please set it in .streamlit/secrets.toml or .env file"
+            error_msg = "❌ GROQ_API_KEY not set. أضفه في Streamlit Secrets"
             logger.error(error_msg)
             return f"⚠️ {error_msg}"
 
-        # 2. بناء الرسائل
         messages = self._build_messages(
             question=question,
             context=context,
             system_prompt=system_prompt
         )
 
-        # 3. تجهيز الطلب
         payload = {
             "model": self.model,
             "messages": messages,
@@ -121,13 +121,11 @@ class GroqClient:
         }
 
         try:
-            # 4. إرسال الطلب
             if stream:
                 response_text = await self._stream_request(payload)
             else:
                 response_text = await self._sync_request(payload)
 
-            # 5. تحديث الإحصائيات
             elapsed = time.time() - start_time
             self._update_stats(len(response_text), elapsed)
 
@@ -146,12 +144,6 @@ class GroqClient:
     async def _sync_request(self, payload: Dict[str, Any]) -> str:
         """
         إرسال طلب عادي (غير متدفق)
-
-        Args:
-            payload: بيانات الطلب
-
-        Returns:
-            الإجابة النصية
         """
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
@@ -160,13 +152,11 @@ class GroqClient:
                 json=payload
             )
 
-            # التحقق من الاستجابة
             if response.status_code != 200:
                 error_msg = f"❌ API Error: {response.status_code} - {response.text}"
                 logger.error(error_msg)
                 return error_msg
 
-            # استخراج الإجابة
             data = response.json()
 
             if "choices" in data and len(data["choices"]) > 0:
@@ -177,12 +167,6 @@ class GroqClient:
     async def _stream_request(self, payload: Dict[str, Any]) -> str:
         """
         إرسال طلب مع تدفق
-
-        Args:
-            payload: بيانات الطلب
-
-        Returns:
-            الإجابة النصية الكاملة
         """
         full_response = ""
 
@@ -212,8 +196,6 @@ class GroqClient:
                                 content = delta.get("content", "")
                                 if content:
                                     full_response += content
-                                    # طباعة أثناء التدفق (للاختبار)
-                                    print(content, end="", flush=True)
                         except json.JSONDecodeError:
                             continue
 
@@ -231,38 +213,26 @@ class GroqClient:
     ) -> List[Dict[str, str]]:
         """
         بناء قائمة الرسائل للطلب
-
-        Args:
-            question: سؤال المستخدم
-            context: السياق
-            system_prompt: توجيه النظام
-
-        Returns:
-            قائمة الرسائل
         """
         messages = []
 
-        # 1. توجيه النظام
         if system_prompt:
             messages.append({
                 "role": "system",
                 "content": system_prompt
             })
         else:
-            # توجيه النظام الافتراضي
             messages.append({
                 "role": "system",
                 "content": self._get_default_system_prompt(context)
             })
 
-        # 2. السياق (إذا كان موجوداً)
         if context and context.strip():
             messages.append({
                 "role": "user",
                 "content": f"المعلومات المتاحة:\n{context}\n\nالسؤال: {question}"
             })
         else:
-            # إذا لم يكن هناك سياق
             messages.append({
                 "role": "user",
                 "content": f"{question}\n\nملاحظة: لا توجد معلومات كافية للإجابة على هذا السؤال."
@@ -273,14 +243,7 @@ class GroqClient:
     def _get_default_system_prompt(self, context: str) -> str:
         """
         الحصول على توجيه النظام الافتراضي
-
-        Args:
-            context: السياق
-
-        Returns:
-            توجيه النظام
         """
-        # إذا كان هناك سياق
         if context and context.strip():
             return """أنت مساعد ذكي متخصص في مجال المشتريات وإدارة العقود.
 المهمة: استخدم المعلومات المتاحة في السياق للإجابة على أسئلة المستخدم.
@@ -305,16 +268,11 @@ class GroqClient:
     def _update_stats(self, tokens: int, elapsed: float) -> None:
         """
         تحديث الإحصائيات
-
-        Args:
-            tokens: عدد الرموز
-            elapsed: زمن المعالجة
         """
         self.stats["total_requests"] += 1
         self.stats["total_tokens"] += tokens
         self.stats["last_request_time"] = elapsed
 
-        # تحديث المتوسط
         total = self.stats["total_requests"]
         if total > 0:
             self.stats["avg_response_time"] = (
@@ -328,15 +286,11 @@ class GroqClient:
     async def check_health(self) -> bool:
         """
         التحقق من صحة الاتصال بـ Groq API
-
-        Returns:
-            صحة الاتصال
         """
         if not self.api_key:
             return False
 
         try:
-            # إرسال طلب اختبار بسيط
             test_response = await self.generate(
                 question="Hello",
                 context="",
@@ -344,7 +298,6 @@ class GroqClient:
                 max_tokens=10
             )
 
-            # التحقق من أن الاستجابة لا تحتوي على خطأ
             if not test_response.startswith("❌") and not test_response.startswith("⚠️"):
                 logger.info("✅ Groq API health check passed")
                 return True
@@ -359,9 +312,6 @@ class GroqClient:
     def get_stats(self) -> Dict[str, Any]:
         """
         الحصول على إحصائيات العميل
-
-        Returns:
-            إحصائيات العميل
         """
         return {
             **self.stats,
@@ -383,9 +333,6 @@ class GroqClient:
     def set_api_key(self, api_key: str) -> None:
         """
         تحديث مفتاح API
-
-        Args:
-            api_key: المفتاح الجديد
         """
         self.api_key = api_key
         self.headers["Authorization"] = f"Bearer {api_key}"
@@ -394,9 +341,6 @@ class GroqClient:
     def set_model(self, model: str) -> None:
         """
         تحديث النموذج
-
-        Args:
-            model: اسم النموذج الجديد
         """
         self.model = model
         logger.info(f"🔄 Groq model updated to: {model}")
