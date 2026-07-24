@@ -15,10 +15,10 @@ from pathlib import Path
 import hashlib
 from datetime import datetime
 
-from app.core.config import settings
-from app.database.faiss_loader import FAISSLoader
-from app.database.embeddings import Embeddings
-from app.utils.logger import logger
+from core.config import settings
+from database.faiss_loader import FAISSLoader
+from database.embeddings import Embeddings
+from utils.logger import logger
 
 
 class Retriever:
