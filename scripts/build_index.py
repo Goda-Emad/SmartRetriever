@@ -1,4 +1,3 @@
-# scripts/build_index.py
 """
 🔨 بناء فهرس FAISS من knowledge_base
 يشتغل تلقائياً عند بدء التطبيق لو الفهرس مش موجود
@@ -34,15 +33,20 @@ async def build_index():
             continue
         for file_path in category_dir.glob("*.docx"):
             try:
-                chunks = loader.load(str(file_path))
-                for chunk in chunks:
-                    if not isinstance(chunk, dict):
-                        chunk = {"text": str(chunk), "metadata": {}}
-                    chunk.setdefault("metadata", {})
+                # استخدام load_file بدلاً من load
+                result = loader.load_file(str(file_path))
+                if result:
+                    # load_file بترجع قاموس واحد، نحوله إلى قائمة لتوحيد المعالجة
+                    chunk = {
+                        "text": result.get("text", ""),
+                        "metadata": result.get("metadata", {})
+                    }
                     chunk["metadata"]["category"] = category_dir.name
                     chunk["metadata"]["filename"] = file_path.name
                     all_chunks.append(chunk)
-                logger.info(f"✅ Loaded: {file_path.name} ({len(chunks)} chunks)")
+                    logger.info(f"✅ Loaded: {file_path.name}")
+                else:
+                    logger.warning(f"⚠️ Failed to load: {file_path.name}")
             except Exception as e:
                 logger.error(f"❌ Error loading {file_path.name}: {e}")
 
