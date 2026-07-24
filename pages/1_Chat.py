@@ -1,46 +1,92 @@
 """
-💬 صفحة المحادثة - Chat Page
-
-الصفحة الرئيسية للمحادثة مع الذكاء الاصطناعي
+💬 صفحة المحادثة الذكية - SmartRetriever Auto Chat
+تتيح للمستخدم التفاعل المباشر مع الذكاء الاصطناعي واسترجاع المستندات.
 """
 
 import streamlit as st
 import sys
+import uuid
 from pathlib import Path
 
-# إضافة المجلد الحالي إلى المسار
+# إضافة المجلد الرئيسي للتطبيق إلى المسار
 sys.path.append(str(Path(__file__).parent.parent))
 
-# استيراد الخدمات والمكونات
+from components.sidebar import render_sidebar
 from services.chat_service import ChatService
-from components.chat_utils import (
-    render_sources,
-    render_suggested_questions,
-    render_error,
-    render_loading_indicator
-)
+from components.chat_utils import render_sources, render_error
 from core.config import settings
 from utils.logger import logger
 
+# ============================================================
+# ⚙️ إعدادات الصفحة
+# ============================================================
+st.set_page_config(
+    page_title="المساعد الذكي | SmartRetriever Auto",
+    page_icon="💬",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 
 # ============================================================
-# ✅ تحميل التنسيقات (CSS)
+# 🎨 تحميل التنسيقات المخصصة (CSS)
 # ============================================================
-
 def load_css():
-    """تحميل ملف التنسيقات المخصص"""
+    """تحميل تنسيقات الواجهة وإخفاء القائمة الجانبية الافتراضية"""
+    st.markdown("""
+        <style>
+        /* 🚫 إخفاء قائمة التنقل الافتراضية التي يولدها Streamlit */
+        [data-testid="stSidebarNav"] {
+            display: none !important;
+        }
+
+        /* تحسين صندوق المحادثة */
+        .stChatMessage {
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            margin-bottom: 0.8rem !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        /* هيدر الصفحة */
+        .chat-header {
+            background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 14px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* أزرار الأسئلة المقترحة */
+        div[data-testid="stColumn"] div.stButton > button {
+            background: #182232 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #CBD5E1 !important;
+            border-radius: 10px !important;
+            padding: 0.6rem 0.8rem !important;
+            font-size: 0.88rem !important;
+            text-align: right !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        div[data-testid="stColumn"] div.stButton > button:hover {
+            border-color: #38BDF8 !important;
+            color: #38BDF8 !important;
+            background: #1E293B !important;
+            transform: translateY(-2px) !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     css_file = Path(__file__).parent.parent / "styles" / "custom.css"
     if css_file.exists():
         with open(css_file, "r", encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    else:
-        logger.warning(f"⚠️ CSS file not found: {css_file}")
 
 
 # ============================================================
 # 1. تهيئة خدمة المحادثة
 # ============================================================
-
 @st.cache_resource
 def get_chat_service():
     """تهيئة خدمة المحادثة (مرة واحدة)"""
@@ -50,28 +96,40 @@ chat_service = get_chat_service()
 
 
 # ============================================================
-# 2. تهيئة حالة الجلسة
+# 2. تهيئة حالة الجلسة (Session State)
 # ============================================================
-
 def init_session_state():
-    """تهيئة حالة الجلسة"""
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    
     if "session_id" not in st.session_state:
-        import uuid
         st.session_state.session_id = str(uuid.uuid4())
-    
-    if "is_processing" not in st.session_state:
-        st.session_state.is_processing = False
+    if "pending_question" not in st.session_state:
+        st.session_state.pending_question = None
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "المساعد الذكي"
 
 
 # ============================================================
-# 3. عرض الرسائل
+# 🔀 التوجيه بين الصفحات
 # ============================================================
+def handle_routing(selected_page: str):
+    """ربط التنقل بين الصفحات"""
+    page_routes = {
+        "HOME": "app.py",
+        "المستندات": "pages/2_Documents.py",
+        "التحليلات": "pages/3_Analytics.py",
+    }
+    if selected_page in page_routes:
+        target_file = page_routes[selected_page]
+        if Path(target_file).exists():
+            st.switch_page(target_file)
 
+
+# ============================================================
+# 3. عرض سوابق المحادثة
+# ============================================================
 def display_messages():
-    """عرض جميع الرسائل في المحادثة"""
+    """عرض كافة الرسائل السابقة والمصادر"""
     for message in st.session_state.messages:
         role = message.get("role", "user")
         content = message.get("content", "")
@@ -80,158 +138,167 @@ def display_messages():
         with st.chat_message(role):
             st.markdown(content)
             
-            # عرض المصادر إذا كانت موجودة
+            # عرض المصادر لردود المساعد
             if sources and role == "assistant":
                 render_sources(sources)
 
 
 # ============================================================
-# 4. معالجة السؤال
+# 4. معالجة سؤال المستخدم
 # ============================================================
-
 def process_question(question: str):
-    """
-    معالجة سؤال المستخدم
-    
-    Args:
-        question: سؤال المستخدم
-    """
-    # إضافة رسالة المستخدم
+    """معالجة السؤال واستدعاء الخدمة مع حفظ النتيجة"""
+    if not question.strip():
+        return
+
+    # 1. إضافة وعرض سؤال المستخدم
     st.session_state.messages.append({"role": "user", "content": question})
-    
-    # عرض رسالة المستخدم
     with st.chat_message("user"):
         st.markdown(question)
-    
-    # توليد الرد
+
+    # 2. توليد وعرض رد المساعد الذكي
     with st.chat_message("assistant"):
-        with st.spinner("🤔 جاري البحث والتفكير..."):
+        with st.spinner("🤔 جاري البحث في المستندات واستخلاص الإجابة..."):
             try:
-                # ✅ استدعاء الدالة المتزامنة بدلاً من غير المتزامنة
                 response = chat_service.process_question_sync(
                     question=question,
                     session_id=st.session_state.session_id
                 )
                 
-                # حفظ session_id
-                if not st.session_state.session_id:
+                # تحديث معرف الجلسة إن وجد
+                if response.get("session_id"):
                     st.session_state.session_id = response["session_id"]
                 
-                # عرض الإجابة
-                st.markdown(response["answer"])
+                answer = response.get("answer", "لم أتمكن من الحصول على إجابة.")
+                sources = response.get("sources", [])
                 
-                # عرض المصادر
-                if response.get("sources"):
-                    render_sources(response["sources"])
+                # عرض الإجابة والمصادر
+                st.markdown(answer)
+                if sources:
+                    render_sources(sources)
                 
-                # حفظ الرسالة
+                # حفظ الرد في حالة الجلسة
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": response["answer"],
-                    "sources": response.get("sources", [])
+                    "content": answer,
+                    "sources": sources
                 })
                 
             except Exception as e:
-                error_msg = f"❌ حدث خطأ: {str(e)}"
+                error_msg = f"❌ حدث خطأ أثناء معالجة الطلب: {str(e)}"
                 st.error(error_msg)
-                logger.error(f"Error processing question: {str(e)}")
+                logger.error(f"Chat error: {str(e)}")
                 
-                # حفظ رسالة الخطأ
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": error_msg
+                    "content": error_msg,
+                    "sources": []
                 })
 
 
 # ============================================================
 # 5. عرض الأسئلة المقترحة
 # ============================================================
-
 def display_suggested_questions():
-    """عرض الأسئلة المقترحة"""
+    """عرض اقتراحات الأسئلة فقط عند بداية المحادثة"""
     if len(st.session_state.messages) > 0:
         return
-    
-    st.markdown("---")
-    
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("##### 💡 أسئلة مقترحة للبدء:")
+
     suggestions = [
         "ما هي شروط عقد Alpha Inc؟",
         "مين أفضل مورد حسب تقارير الجودة؟",
-        "إيه سياسة تقييم الموردين؟",
+        "إيه سياسة تقييم الموردين المعتمدة؟",
         "قارن بين عروض أسعار Alpha Inc و Beta Supplies",
-        "ما هي قيمة عقد Gamma Co؟",
-        "تقرير جودة Delta Logistics"
+        "ما هي تفاصيل وقيمة عقد Gamma Co؟",
+        "ملخص تقرير جودة Delta Logistics"
     ]
-    
-    st.markdown("### 💡 أسئلة مقترحة")
-    
+
     cols = st.columns(2)
     for i, suggestion in enumerate(suggestions):
         with cols[i % 2]:
-            if st.button(suggestion, use_container_width=True, key=f"suggested_{i}"):
-                process_question(suggestion)
+            if st.button(f"📌 {suggestion}", use_container_width=True, key=f"suggest_{i}"):
+                st.session_state.pending_question = suggestion
                 st.rerun()
 
 
 # ============================================================
-# 6. الصفحة الرئيسية
+# 6. الصفحة الرئيسية للمحادثة
 # ============================================================
-
 def show():
-    """عرض صفحة المحادثة"""
-    
-    # ✅ تحميل التنسيقات أولاً
+    """عرض الواجهة الكلية لصفحة المحادثة"""
     load_css()
-    
-    # تهيئة حالة الجلسة
     init_session_state()
+
+    # ✅ 1. عرض السايدبار والتنقل
+    st.session_state.current_page = "المساعد الذكي"
+    selected_page = render_sidebar(
+        show_theme_toggle=True,
+        show_stats=False,
+        show_navigation=True
+    )
     
-    # ============================================================
-    # رأس الصفحة
-    # ============================================================
+    # تحويل الصفحة في حال اضغط المستخدم على زر آخر بالسايدبار
+    if selected_page != "المساعد الذكي":
+        handle_routing(selected_page)
+
+    # ✅ 2. الهيدر والتحكم العشرين
+    col_title, col_actions = st.columns([3, 1.5])
     
-    st.title("💬 محادثة ProcureMind")
-    st.caption("اسأل عن أي شيء في المستندات (عقود، موردين، سياسات، تقارير جودة)")
-    
-    # أزرار التحكم
-    col1, col2, col3 = st.columns([3, 1, 1])
-    
-    with col2:
-        if st.button("🗑️ مسح المحادثة", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.session_id = None
-            st.rerun()
-    
-    with col3:
-        if st.button("🔄 تحديث", use_container_width=True):
-            st.rerun()
-    
-    st.divider()
-    
-    # ============================================================
-    # عرض الرسائل
-    # ============================================================
-    
+    with col_title:
+        st.markdown("""
+        <div class="chat-header">
+            <h2 style="color: #FFFFFF; font-weight: 800; margin: 0 0 6px 0;">
+                💬 المساعد الذكي (SmartRetriever)
+            </h2>
+            <p style="color: #94A3B8; font-size: 0.88rem; margin: 0;">
+                طرح الأسئلة والبحث التفاعلي في العقود، السياسات، والمستندات المخزنة.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_actions:
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        ac1, ac2 = st.columns(2)
+        with ac1:
+            if st.button("🗑️ مسح", use_container_width=True, help="مسح سجل المحادثة الحالي"):
+                st.session_state.messages = []
+                st.session_state.session_id = str(uuid.uuid4())
+                st.rerun()
+        with ac2:
+            if st.button("🔄 تحديث", use_container_width=True, help="تحديث الصفحة"):
+                st.rerun()
+
+    st.markdown("---")
+
+    # ✅ 3. عرض سجل الرسائل
     display_messages()
-    
-    # ============================================================
-    # مدخل النص
-    # ============================================================
-    
-    if prompt := st.chat_input("اكتب سؤالك هنا..."):
-        process_question(prompt)
+
+    # ✅ 4. معالجة الأسلئة المجهزة أو المدخلة من مربع النص
+    query_to_process = None
+
+    # إذا كان هناك سؤال معلق من الأزرار المقترحة
+    if st.session_state.pending_question:
+        query_to_process = st.session_state.pending_question
+        st.session_state.pending_question = None
+
+    # مدخل النص الأساسي
+    elif prompt := st.chat_input("اكتب سؤالك هنا عن المستندات أو العقود..."):
+        query_to_process = prompt
+
+    # معالجة السؤال إذا وجد
+    if query_to_process:
+        process_question(query_to_process)
         st.rerun()
-    
-    # ============================================================
-    # الأسئلة المقترحة
-    # ============================================================
-    
+
+    # ✅ 5. عرض الأسئلة المقترحة (في حال لا توجد رسائل بعد)
     display_suggested_questions()
 
 
 # ============================================================
-# 7. تشغيل الصفحة (إذا كانت مستقلة)
+# 🚀 تشغيل الصفحة
 # ============================================================
-
 if __name__ == "__main__":
     show()
