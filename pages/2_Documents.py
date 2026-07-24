@@ -22,6 +22,20 @@ from utils.logger import logger
 
 
 # ============================================================
+# ✅ تحميل التنسيقات (CSS)
+# ============================================================
+
+def load_css():
+    """تحميل ملف التنسيقات المخصص"""
+    css_file = Path(__file__).parent.parent / "styles" / "custom.css"
+    if css_file.exists():
+        with open(css_file, "r", encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    else:
+        logger.warning(f"⚠️ CSS file not found: {css_file}")
+
+
+# ============================================================
 # 1. دوال مساعدة
 # ============================================================
 
@@ -149,6 +163,9 @@ def rebuild_index():
 
 def show():
     """عرض صفحة المستندات"""
+    
+    # ✅ تحميل التنسيقات أولاً
+    load_css()
     
     st.title("📄 إدارة المستندات")
     st.caption("رفع وعرض المستندات في قاعدة المعرفة")
