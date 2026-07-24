@@ -45,20 +45,29 @@ def init_session_state():
         }
 
 init_session_state()
-setup_logging()
-logger.info("🚀 Starting SmartRetriever application")
+# ============================================================
+# بناء الفهرس تلقائياً لو مش موجود
+# ============================================================
 
-# الصفحة الرئيسية فقط - Streamlit يتحكم في الـ multipage تلقائياً
-st.title("🧠 SmartRetriever")
-st.caption("نظام استرجاع ذكي للمستندات")
-st.markdown("---")
-render_info("اختر صفحة من القائمة الجانبية للبدء")
+@st.cache_resource(show_spinner="⏳ جاري بناء فهرس المستندات...")
+def build_index_if_needed():
+    import asyncio
+    from pathlib import Path
+    
+    index_path = settings.FAISS_INDEX_PATH / "index.faiss"
+    if index_path.exists():
+        logger.info("✅ FAISS index already exists")
+        return True
+    
+    logger.info("🔨 Building FAISS index...")
+    try:
+        from scripts.build_index import build_index
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(build_index())
+        return result
+    except Exception as e:
+        logger.error(f"❌ Index build failed: {e}")
+        return False
 
-st.markdown("---")
-col1, col2, col3 = st.columns([2, 2, 1])
-with col1:
-    st.caption(f"🧠 {settings.APP_NAME} v{settings.APP_VERSION}")
-with col2:
-    st.caption(f"📊 البيئة: {settings.ENVIRONMENT}")
-with col3:
-    st.caption("© 2026 SmartRetriever")
+build_index_if_needed()
