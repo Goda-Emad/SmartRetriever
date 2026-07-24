@@ -1,4 +1,3 @@
-# llm/groq_client.py
 """
 🤖 عميل Groq API
 
@@ -77,7 +76,7 @@ class GroqClient:
         question: str,
         context: str = "",
         temperature: float = 0.7,
-        max_tokens: int = 1000,
+        max_tokens: int = 500,  # ✅ تم التخفيض من 1000 إلى 500
         system_prompt: Optional[str] = None,
         stream: bool = False,
         **kwargs
@@ -104,6 +103,10 @@ class GroqClient:
             error_msg = "❌ GROQ_API_KEY not set. أضفه في Streamlit Secrets"
             logger.error(error_msg)
             return f"⚠️ {error_msg}"
+
+        # ✅ تقليل حجم السياق إلى 3000 حرف كحد أقصى
+        if len(context) > 3000:
+            context = context[:3000] + "\n...(تم اختصار السياق لتقليل حجم الطلب)"
 
         messages = self._build_messages(
             question=question,
@@ -295,7 +298,7 @@ class GroqClient:
                 question="Hello",
                 context="",
                 temperature=0.1,
-                max_tokens=10
+                max_tokens=50  # ✅ تم التخفيض من 10 إلى 50
             )
 
             if not test_response.startswith("❌") and not test_response.startswith("⚠️"):
