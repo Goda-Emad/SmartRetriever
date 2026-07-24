@@ -1,10 +1,8 @@
-# app/utils/__init__.py
+# utils/__init__.py
 """
 🛠️ وحدة الأدوات المساعدة - Utils Module
-
 تحتوي على أدوات ووظائف مساعدة تستخدم في جميع أنحاء التطبيق
 """
-
 from .logger import logger, setup_logging
 from .file_utils import (
     FileUtils,
@@ -25,13 +23,9 @@ from .file_utils import (
     get_unique_filename
 )
 
-# تعريف ما يتم تصديره عند استيراد الوحدة
 __all__ = [
-    # التسجيل
     'logger',
     'setup_logging',
-    
-    # أدوات الملفات
     'FileUtils',
     'get_file_extension',
     'get_file_name',
@@ -50,11 +44,9 @@ __all__ = [
     'get_unique_filename'
 ]
 
-# معلومات الوحدة
 __version__ = "1.0.0"
-__description__ = "ProcureMind-AI Utils Module - أدوات ووظائف مساعدة"
+__description__ = "SmartRetriever Utils Module - أدوات ووظائف مساعدة"
 
-# قائمة الأدوات المتاحة
 UTILS_LIST = {
     "logger": "نظام التسجيل وإدارة السجلات",
     "file_utils": "أدوات التعامل مع الملفات"
