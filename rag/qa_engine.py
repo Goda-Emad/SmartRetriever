@@ -70,7 +70,7 @@ class QAEngine:
         self.retriever = retriever or Retriever()
         self.reranker = reranker or Reranker()
         self.chunking = chunking or Chunking()
-        self.llm = llm or GroqClient()  # ✅ تم التصحيح: GroqClient بدلاً من GrokClient
+        self.llm = llm or GroqClient()
         
         self.default_top_k = settings.DEFAULT_TOP_K
         self.default_max_sources = settings.DEFAULT_MAX_SOURCES
@@ -153,6 +153,10 @@ class QAEngine:
         else:
             full_context = built_context
         
+        # ✅ اقتصاص السياق الكامل إذا كان كبيراً جداً (حماية إضافية)
+        if len(full_context) > 3000:
+            full_context = full_context[:3000] + "\n...(تم اختصار السياق لتقليل حجم الطلب)"
+        
         chunks_used = len(reranked_docs)
         
         # 6. توليد الإجابة
@@ -226,10 +230,15 @@ class QAEngine:
             category = doc.get("metadata", {}).get("category", "غير مصنف")
             relevance = doc.get("relevance_score", 0.0)
             
+            # ✅ اقتصاص النص إلى 500 حرف كحد أقصى لكل مستند
+            text_content = doc.get('text', '')
+            if len(text_content) > 500:
+                text_content = text_content[:500] + "..."
+            
             context_parts.append(f"[{i}] المصدر: {source}")
             context_parts.append(f"    التصنيف: {category}")
             context_parts.append(f"    درجة المطابقة: {relevance:.2%}")
-            context_parts.append(f"    المحتوى:\n    {doc.get('text', '')}")
+            context_parts.append(f"    المحتوى:\n    {text_content}")
             context_parts.append("")
         
         return "\n".join(context_parts)
@@ -251,8 +260,12 @@ class QAEngine:
         
         for i, chunk in enumerate(chunks, 1):
             source = chunk.metadata.get("metadata", {}).get("filename", f"مصدر {i}")
+            # ✅ اقتصاص النص إلى 500 حرف كحد أقصى لكل قطعة
+            text_content = chunk.text
+            if len(text_content) > 500:
+                text_content = text_content[:500] + "..."
             context_parts.append(f"[{i}] {source}:")
-            context_parts.append(chunk.text)
+            context_parts.append(text_content)
             context_parts.append("")
         
         return "\n".join(context_parts)
@@ -377,11 +390,16 @@ class QAEngine:
         for doc in documents:
             metadata = doc.get("metadata", {})
             
+            # ✅ اقتصاص المحتوى للمصادر أيضاً
+            content = doc.get("text", "")
+            if len(content) > 300:
+                content = content[:300] + "..."
+            
             source = {
                 "id": doc.get("id", ""),
                 "filename": metadata.get("filename", "مصدر غير معروف"),
                 "category": metadata.get("category", "غير مصنف"),
-                "content": doc.get("text", ""),
+                "content": content,
                 "relevance_score": doc.get("relevance_score", 0.0),
                 "preview": self._get_preview(doc.get("text", ""))
             }
