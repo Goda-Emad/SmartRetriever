@@ -1,13 +1,11 @@
-# app/rag/retriever.py
 """
 🔍 استرجاع المستندات (Retriever)
 
-يقوم بالبحث في فهرس FAISS واسترجاع المستندات الأكثر تشابهاً مع السؤال
+يقوم بالبحث في قاعدة بيانات Chroma واسترجاع المستندات الأكثر تشابهاً مع السؤال
 """
 
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
-import faiss
 import pickle
 import os
 import json
@@ -16,14 +14,14 @@ import hashlib
 from datetime import datetime
 
 from core.config import settings
-from database.faiss_loader import FAISSLoader
+from database.chroma_loader import ChromaLoader  # ✅ استبدال FAISSLoader بـ ChromaLoader
 from database.embeddings import Embeddings
 from utils.logger import logger
 
 
 class Retriever:
     """
-    استرجاع المستندات من فهرس FAISS
+    استرجاع المستندات من قاعدة بيانات Chroma
     
     يدعم:
     - البحث الدلالي باستخدام المتجهات
@@ -34,7 +32,7 @@ class Retriever:
     
     def __init__(
         self,
-        faiss_loader: Optional[FAISSLoader] = None,
+        chroma_loader: Optional[ChromaLoader] = None,  # ✅ تغيير الاسم
         embeddings: Optional[Embeddings] = None,
         top_k: int = 10
     ):
@@ -42,11 +40,11 @@ class Retriever:
         تهيئة أداة الاسترجاع
         
         Args:
-            faiss_loader: محمل فهرس FAISS
+            chroma_loader: محمل قاعدة بيانات Chroma
             embeddings: أداة توليد المتجهات
             top_k: عدد النتائج الافتراضي
         """
-        self.faiss_loader = faiss_loader or FAISSLoader()
+        self.chroma_loader = chroma_loader or ChromaLoader()  # ✅ استخدام ChromaLoader
         self.embeddings = embeddings or Embeddings()
         self.top_k = top_k
         
@@ -58,7 +56,7 @@ class Retriever:
             "last_query_time": 0
         }
         
-        logger.info("🔍 Retriever initialized")
+        logger.info("🔍 Retriever initialized with Chroma")
     
     # ============================================================
     # الطريقة الرئيسية
@@ -92,24 +90,19 @@ class Retriever:
         # 1. توليد متجه للسؤال
         query_vector = await self.embeddings.encode(query)
         
-        # 2. البحث في FAISS
-        results = await self.faiss_loader.search(
-            query_vector=query_vector,
-            top_k=top_k or self.top_k
-        )
-        
-        # 3. تصفية النتائج
-        filtered_results = self._filter_results(
-            results,
-            filter_category=filter_category,
-            filter_supplier=filter_supplier,
+        # 2. البحث في Chroma (مع دعم التصفية المدمج)
+        results = await self.chroma_loader.search(  # ✅ استخدام Chroma
+            query_vector=query_vector.tolist() if hasattr(query_vector, 'tolist') else query_vector,
+            top_k=top_k or self.top_k,
+            filter_category=filter_category,  # ✅ تصفية مدمجة
+            filter_supplier=filter_supplier,  # ✅ تصفية مدمجة
             min_score=min_score
         )
         
-        # 4. تنسيق النتائج
-        formatted_results = self._format_results(filtered_results)
+        # 3. تنسيق النتائج
+        formatted_results = self._format_results(results)
         
-        # 5. تحديث الإحصائيات
+        # 4. تحديث الإحصائيات
         elapsed = time.time() - start_time
         self._update_stats(len(formatted_results), elapsed)
         
@@ -204,7 +197,7 @@ class Retriever:
             قائمة المستندات المسترجعة
         """
         # جلب جميع المستندات مع البيانات الوصفية
-        all_docs = await self.faiss_loader.get_all_documents()
+        all_docs = self.chroma_loader.get_all_documents()  # ✅ استخدام Chroma
         
         # تصفية حسب التصنيف والمورد
         if filter_category:
@@ -251,7 +244,7 @@ class Retriever:
         min_score: float = 0.0
     ) -> List[Dict[str, Any]]:
         """
-        تصفية النتائج
+        تصفية النتائج (تستخدم كمكمل لتصفية Chroma)
         
         Args:
             results: قائمة النتائج
@@ -272,12 +265,12 @@ class Retriever:
             
             metadata = result.get("metadata", {})
             
-            # تصفية حسب التصنيف
+            # تصفية حسب التصنيف (تصفية إضافية)
             if filter_category:
                 if metadata.get("category") != filter_category:
                     continue
             
-            # تصفية حسب المورد
+            # تصفية حسب المورد (تصفية إضافية)
             if filter_supplier:
                 if metadata.get("supplier") != filter_supplier:
                     continue
@@ -469,7 +462,7 @@ class Retriever:
         return {
             **self.stats,
             "top_k": self.top_k,
-            "index_size": self.faiss_loader.get_index_size()
+            "index_size": self.chroma_loader.get_index_size()  # ✅ استخدام Chroma
         }
     
     def reset(self) -> None:
