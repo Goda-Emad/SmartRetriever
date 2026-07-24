@@ -1,4 +1,3 @@
-# app/pages/1_Chat.py
 """
 💬 صفحة المحادثة - Chat Page
 
@@ -94,8 +93,8 @@ def process_question(question: str):
     with st.chat_message("assistant"):
         with st.spinner("🤔 جاري البحث والتفكير..."):
             try:
-                # استدعاء خدمة المحادثة
-                response = chat_service.process_question(
+                # ✅ استدعاء الدالة المتزامنة بدلاً من غير المتزامنة
+                response = chat_service.process_question_sync(
                     question=question,
                     session_id=st.session_state.session_id
                 )
