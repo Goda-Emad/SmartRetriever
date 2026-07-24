@@ -129,8 +129,12 @@ def get_quality_scores(documents):
             if match:
                 score = int(match.group(1))
                 if score <= 100:
+                    # استخراج اسم المورد من اسم الملف
+                    supplier_name = doc["filename"].replace('_Quality_Report_', '').replace('.docx', '')
+                    # تنظيف الاسم إذا كان يحتوي على أرقام
+                    supplier_name = re.sub(r'^\d+_', '', supplier_name)
                     scores.append({
-                        "supplier": doc["filename"].replace('_Quality_Report_', '').replace('.docx', ''),
+                        "supplier": supplier_name,
                         "score": score,
                         "category": doc["category"]
                     })
@@ -159,8 +163,10 @@ def get_contract_values(documents):
                     value_str = match.group(1).replace(',', '')
                     value = float(value_str)
                     if value > 1000:
+                        supplier_name = doc["filename"].replace('_Supplier_Contract_', '').replace('.docx', '')
+                        supplier_name = re.sub(r'^\d+_', '', supplier_name)
                         contracts.append({
-                            "supplier": doc["filename"].replace('_Supplier_Contract_', '').replace('.docx', ''),
+                            "supplier": supplier_name,
                             "value": value,
                             "category": doc["category"]
                         })
@@ -233,9 +239,14 @@ def show():
     
     # 3.1 توزيع المستندات حسب التصنيف
     if stats["by_category"]:
+        df_categories = pd.DataFrame({
+            "التصنيف": list(stats["by_category"].keys()),
+            "العدد": list(stats["by_category"].values())
+        })
         fig1 = px.pie(
-            names=list(stats["by_category"].keys()),
-            values=list(stats["by_category"].values()),
+            df_categories,
+            names="التصنيف",
+            values="العدد",
             title="📊 توزيع المستندات حسب التصنيف",
             color_discrete_sequence=px.colors.qualitative.Set3,
             hole=0.3
@@ -254,11 +265,15 @@ def show():
         col1, col2 = st.columns(2)
         
         with col1:
+            df_filetypes = pd.DataFrame({
+                "نوع الملف": list(stats["file_types"].keys()),
+                "العدد": list(stats["file_types"].values())
+            })
             fig2 = px.bar(
-                x=list(stats["file_types"].keys()),
-                y=list(stats["file_types"].values()),
+                df_filetypes,
+                x="نوع الملف",
+                y="العدد",
                 title="📂 أنواع الملفات",
-                labels={"x": "نوع الملف", "y": "العدد"},
                 color_discrete_sequence=["#2563EB"]
             )
             fig2.update_layout(height=300)
@@ -268,10 +283,11 @@ def show():
             # توزيع الأحجام
             if documents:
                 sizes = [doc["size"] / 1024 for doc in documents]
+                df_sizes = pd.DataFrame({"الحجم (KB)": sizes})
                 fig3 = px.histogram(
-                    x=sizes,
+                    df_sizes,
+                    x="الحجم (KB)",
                     title="📊 توزيع أحجام الملفات (KB)",
-                    labels={"x": "الحجم (KB)", "y": "العدد"},
                     nbins=10,
                     color_discrete_sequence=["#10B981"]
                 )
@@ -306,10 +322,10 @@ def show():
         
         # رسم بياني للموردين
         fig4 = px.bar(
-            x=[s["name"] for s in suppliers],
-            y=[s["documents"] for s in suppliers],
+            suppliers_df,
+            x="المورد",
+            y="المستندات",
             title="📊 عدد المستندات لكل مورد",
-            labels={"x": "المورد", "y": "عدد المستندات"},
             color_discrete_sequence=["#8B5CF6"]
         )
         fig4.update_layout(height=350)
@@ -348,12 +364,13 @@ def show():
                 delta=f"{best['score']}%"
             )
         
-        # رسم بياني لدرجات الجودة
+        # رسم بياني لدرجات الجودة - ✅ تم الإصلاح
         fig5 = px.bar(
-            x=[s["supplier"] for s in quality_scores],
-            y=[s["score"] for s in quality_scores],
+            scores_df,
+            x="supplier",
+            y="score",
             title="⭐ درجات الجودة لكل مورد",
-            labels={"x": "المورد", "y": "درجة الجودة (%)"},
+            labels={"supplier": "المورد", "score": "درجة الجودة (%)"},
             color="score",
             color_continuous_scale="RdYlGn",
             range_color=[0, 100]
@@ -390,10 +407,10 @@ def show():
         
         # رسم بياني للعقود
         fig6 = px.bar(
-            x=contracts_df["المورد"],
-            y=contracts_df["القيمة (ريال)"],
+            contracts_df,
+            x="المورد",
+            y="القيمة (ريال)",
             title="💰 قيم العقود لكل مورد",
-            labels={"x": "المورد", "y": "القيمة (ريال)"},
             color_discrete_sequence=["#F59E0B"]
         )
         fig6.update_layout(height=350)
