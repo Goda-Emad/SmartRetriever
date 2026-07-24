@@ -15,11 +15,57 @@ from utils.logger import logger
 # ⚙️ إعدادات الصفحة الرئيسية
 # ============================================================
 st.set_page_config(
-    page_title="SmartRetriever Auto | AI Platform",
+    page_title="SmartRetriever | AI Platform",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# ============================================================
+# 🌐 قاموس النصوص المترجمة للواجهة الرئيسية
+# ============================================================
+HOME_TRANSLATIONS = {
+    "ar": {
+        "badge": "⚡ نظام استرجاع البيانات الذكي V2.5",
+        "hero_title": "مرحباً بك في منصة SmartRetriever 🧠",
+        "hero_desc": "مساعدك الذكي لاسترجاع وتصنيف البيانات، تحليل العقود والسياسات، والإجابة الدقيقة بناءً على قاعدة معرفتك الخاصة.",
+        "stat_docs": "📄 إجمالي المستندات",
+        "stat_suppliers": "🏢 الموردين المعتمدين",
+        "stat_contracts": "📝 العقود النشطة",
+        "stat_quality": "⭐ دقة الإجابات",
+        "guide_title": "🚀 الدليل السريع للبدء",
+        "guide_chat": "**💬 المساعد الذكي:** اطرح الأسئلة حول عقودك وسياسات الشركة للحصول على إجابات معززة بالمصادر.",
+        "guide_docs": "**📁 أرشيف المستندات:** استعراض ومعاينة كافة الملفات والمستندات الموجودة بالفهرس.",
+        "guide_analytics": "**📊 لوحة التحليلات:** الاطلاع على تحليلات دقيقة وإحصائيات الموردين والعقود بشكل بياني.",
+        "btn_start_chat": "💬 ابدأ المحادثة الآن",
+        "features_title": "✨ ميزات المنصة",
+        "feat_1": "🔍 بحث دلالي (Semantic Search)",
+        "feat_2": "⚡ معالجة فائقة السرعة مع Groq API",
+        "feat_3": "🔒 حماية وأمان كامل للبيانات",
+        "feat_4": "🌙 دعم كلي للوضع الليلي والنهار",
+        "sys_info_title": "⚙️ معلومات وبيئة التشغيل"
+    },
+    "en": {
+        "badge": "⚡ AI RETRIEVAL SYSTEM V2.5",
+        "hero_title": "Welcome to SmartRetriever Platform 🧠",
+        "hero_desc": "Your AI assistant for data retrieval, contract & policy analysis, and accurate Q&A based on your knowledge base.",
+        "stat_docs": "📄 Total Documents",
+        "stat_suppliers": "🏢 Approved Suppliers",
+        "stat_contracts": "📝 Active Contracts",
+        "stat_quality": "⭐ Accuracy Rate",
+        "guide_title": "🚀 Quick Start Guide",
+        "guide_chat": "**💬 AI Assistant:** Ask questions about contracts and policies to get source-backed answers.",
+        "guide_docs": "**📁 Document Archive:** Browse and preview all indexed files and documents.",
+        "guide_analytics": "**📊 Analytics Dashboard:** View detailed analytics and visual supplier stats.",
+        "btn_start_chat": "💬 Start Chatting Now",
+        "features_title": "✨ Platform Features",
+        "feat_1": "🔍 Semantic Search Integration",
+        "feat_2": "⚡ Ultra-fast processing via Groq API",
+        "feat_3": "🔒 End-to-end Data Privacy & Security",
+        "feat_4": "🌙 Full Light & Dark Theme Support",
+        "sys_info_title": "⚙️ System & Environment Info"
+    }
+}
 
 # ============================================================
 # 🎨 تحسين التنسيقات وإخفاء قائمة Streamlit الافتراضية
@@ -28,25 +74,17 @@ def load_css():
     """تحميل التنسيقات مع إخفاء قائمة التنقل الافتراضية لـ Streamlit"""
     st.markdown("""
         <style>
-        /* 🚫 إخفاء قائمة التنقل الافتراضية التي يولدها Streamlit للملفات داخل pages/ */
+        /* 🚫 إخفاء قائمة التنقل الافتراضية التي يولدها Streamlit */
         [data-testid="stSidebarNav"] {
             display: none !important;
         }
         
-        /* تحسين مظهر البطاقات الإحصائية الرئيسية */
+        /* بطاقات الإحصائيات */
         .metric-card {
-            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
             padding: 1.2rem;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-        }
-        .metric-card:hover {
-            border-color: #38BDF8;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.15);
         }
         .metric-value {
             font-size: 1.8rem;
@@ -56,18 +94,14 @@ def load_css():
         }
         .metric-label {
             font-size: 0.85rem;
-            color: #94A3B8;
             font-weight: 600;
         }
         
-        /* Hero Section Styling */
+        /* Hero Section */
         .hero-banner {
-            background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
-            border: 1px solid rgba(99, 102, 241, 0.2);
             border-radius: 16px;
             padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1.5rem;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -89,10 +123,8 @@ def init_session_state():
         st.session_state.session_id = str(uuid.uuid4())
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = True
-    if "is_processing" not in st.session_state:
-        st.session_state.is_processing = False
-    if "current_page" not in st.session_state:
-        st.session_state.current_page = "HOME"
+    if "lang" not in st.session_state:
+        st.session_state.lang = "ar"
     if "stats" not in st.session_state:
         st.session_state.stats = {
             "documents": 17,
@@ -106,7 +138,7 @@ init_session_state()
 # ============================================================
 # ⚡ بناء الفهرس الذكي تلقائياً
 # ============================================================
-@st.cache_resource(show_spinner="⏳ جاري فحص وبناء فهرس المستندات...")
+@st.cache_resource(show_spinner="⏳ Checking & Building FAISS Index...")
 def build_index_if_needed():
     import asyncio
     
@@ -129,52 +161,35 @@ def build_index_if_needed():
 build_index_if_needed()
 
 # ============================================================
-# 🔀 التعامل مع التنقل التفاعلي بين الصفحات
-# ============================================================
-def handle_routing(selected_page: str):
-    """ربط خيارات السايدبار بملفات الصفحات الحقيقية في التطبيق"""
-    page_routes = {
-        "المساعد الذكي": "pages/1_Chat.py",
-        "المستندات": "pages/2_Documents.py",
-        "التحليلات": "pages/3_Analytics.py",
-    }
-    
-    if selected_page in page_routes:
-        target_file = page_routes[selected_page]
-        if Path(target_file).exists():
-            st.switch_page(target_file)
-
-# ============================================================
-# 🏠 الصفحة الرئيسية - Modern SaaS Dashboard UI
+# 🏠 الصفحة الرئيسية - Modern Dashboard UI
 # ============================================================
 def show_home():
     """عرض الواجهة الرئيسية العصرية للتطبيق"""
     
-    # ✅ عرض السايدبار وحفظ الصفحة المختارة
-    current_selected = render_sidebar(
+    # ✅ عرض السايدبار الموحد
+    current_lang = render_sidebar(
         stats=st.session_state.stats,
         show_theme_toggle=True,
         show_stats=False,
         show_navigation=True
     )
     
-    # تنفيذ التوجيه إذا تم الضغط على صفحة أخرى غير الصفحة الرئيسية
-    if current_selected != "HOME":
-        handle_routing(current_selected)
+    # جلب ترجمة الواجهة بناءً على اللغة المحددة
+    T = HOME_TRANSLATIONS.get(current_lang, HOME_TRANSLATIONS["ar"])
 
     # 1. Hero Banner ترحيبي
-    st.markdown("""
+    st.markdown(f"""
     <div class="hero-banner">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <span style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                ⚡ AI RETRIEVAL SYSTEM V2.5
+                {T['badge']}
             </span>
         </div>
-        <h1 style="color: #FFFFFF; font-weight: 800; font-size: 2.2rem; margin: 0 0 10px 0;">
-            مرحباً بك في منصة SmartRetriever Auto 🧠
+        <h1 style="font-weight: 800; font-size: 2.1rem; margin: 0 0 10px 0;">
+            {T['hero_title']}
         </h1>
-        <p style="color: #94A3B8; font-size: 1rem; line-height: 1.6; margin: 0;">
-            مساعدك الذكي لاسترجاع وتصنيف البيانات، تحليل العقود والسياسات، والإجابة الدقيقة بناءً على قاعدة معرفتك الخاصة.
+        <p style="font-size: 0.98rem; line-height: 1.6; margin: 0;">
+            {T['hero_desc']}
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -186,7 +201,7 @@ def show_home():
     with c1:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">📄 إجمالي المستندات</div>
+            <div class="metric-label">{T['stat_docs']}</div>
             <div class="metric-value">{stats.get('documents', 0)}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -194,7 +209,7 @@ def show_home():
     with c2:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">🏢 الموردين المعتمدين</div>
+            <div class="metric-label">{T['stat_suppliers']}</div>
             <div class="metric-value">{stats.get('suppliers', 0)}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -202,7 +217,7 @@ def show_home():
     with c3:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">📝 العقود النشطة</div>
+            <div class="metric-label">{T['stat_contracts']}</div>
             <div class="metric-value">{stats.get('contracts', 0)}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -210,7 +225,7 @@ def show_home():
     with c4:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">⭐ دقة الإجابات</div>
+            <div class="metric-label">{T['stat_quality']}</div>
             <div class="metric-value">{stats.get('quality', 0):.1f}%</div>
         </div>
         """, unsafe_allow_html=True)
@@ -221,43 +236,34 @@ def show_home():
     col_main, col_side = st.columns([2, 1])
 
     with col_main:
-        st.markdown("""
-        ### 🚀 الدليل السريع للبدء
-        """)
-        
-        st.markdown("""
-        * **💬 المساعد الذكي:** يمكنك البدء فوراً بطرح الأسئلة حول عقودك وسياسات الشركة للحصول على إجابات معززة بالمصادر.
-        * **📁 أرشيف المستندات:** استعراض ومعاينة كافة الملفات والمستندات الموجودة بالفهرس.
-        * **📊 لوحة التحليلات:** الاطلاع على تحليلات دقيقة وإحصائيات الموردين والعقود بشكل بياني.
-        """)
+        st.markdown(f"### {T['guide_title']}")
+        st.markdown(f"- {T['guide_chat']}")
+        st.markdown(f"- {T['guide_docs']}")
+        st.markdown(f"- {T['guide_analytics']}")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button("💬 الانتقال للمساعد الذكي الآن", use_container_width=True, type="primary"):
-            handle_routing("المساعد الذكي")
+        if st.button(T['btn_start_chat'], use_container_width=True, type="primary"):
+            st.switch_page("pages/1_Chat.py")
 
     with col_side:
-        st.markdown("### ✨ ميزات المنصة")
-        
-        st.markdown("""
-        - 🔍 **البحث الدلالي (Semantic Search)**
-        - ⚡ **معالجة فائقة السرعة مع Groq API**
-        - 🔒 **حماية وأمان كامل للبيانات**
-        - 🌙 **دعم كلي للوضع الليلي المتقدم**
-        """)
+        st.markdown(f"### {T['features_title']}")
+        st.markdown(f"- {T['feat_1']}")
+        st.markdown(f"- {T['feat_2']}")
+        st.markdown(f"- {T['feat_3']}")
+        st.markdown(f"- {T['feat_4']}")
 
     st.markdown("---")
 
     # 4. تفاصيل ومعلومات النظام (System Status)
-    with st.expander("⚙️ معلومات وبيئة التشغيل", expanded=False):
+    with st.expander(T['sys_info_title'], expanded=False):
         ec1, ec2 = st.columns(2)
         with ec1:
-            st.code(f"مسار الفهرس: {settings.FAISS_INDEX_PATH}", language="text")
-            st.code(f"قاعدة المعرفة: {settings.KNOWLEDGE_BASE_PATH}", language="text")
+            st.code(f"FAISS Path: {settings.FAISS_INDEX_PATH}", language="text")
+            st.code(f"Docs Path: {settings.KNOWLEDGE_BASE_PATH}", language="text")
         with ec2:
-            st.code(f"نموذج الذكاء: {settings.GROQ_MODEL}", language="text")
-            st.code(f"نموذج المتجهات: {settings.EMBEDDING_MODEL}", language="text")
-
+            st.code(f"LLM Model: {settings.GROQ_MODEL}", language="text")
+            st.code(f"Embeddings: {settings.EMBEDDING_MODEL}", language="text")
 
 # ============================================================
 # 🚀 تشغيل التطبيق
