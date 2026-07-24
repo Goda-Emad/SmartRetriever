@@ -120,64 +120,89 @@ class QAEngine:
         max_sources = max_sources or self.default_max_sources
         temperature = temperature or settings.DEFAULT_TEMPERATURE
         
-        # 2. تحسين السؤال
-        enhanced_question = self._enhance_question(question)
+        # ✅ التحقق مما إذا كان السؤال عاماً (لا يحتاج إلى استرجاع مستندات)
+        is_general_question = self._is_general_question(question)
         
-        # 3. استرجاع المستندات
-        retrieved_docs = await self.retriever.retrieve(
-            query=enhanced_question,
-            top_k=top_k,
-            filter_category=filter_category,
-            filter_supplier=filter_supplier
-        )
-        
-        retrieved_count = len(retrieved_docs)
-        logger.info(f"📚 Retrieved {retrieved_count} documents")
-        
-        # 4. إعادة ترتيب النتائج
-        reranked_docs = await self.reranker.rerank(
-            query=question,
-            documents=retrieved_docs,
-            top_k=max_sources
-        )
-        
-        reranked_count = len(reranked_docs)
-        logger.info(f"📊 Reranked to {reranked_count} documents")
-        
-        # 5. بناء السياق
-        built_context = self._build_context(reranked_docs)
-        
-        # دمج السياق الإضافي (من المحادثة السابقة)
-        if context and context.strip():
-            full_context = f"سياق المحادثة السابقة:\n{context}\n\nمعلومات من المستندات:\n{built_context}"
+        if is_general_question:
+            logger.info(f"💬 سؤال عام تم اكتشافه: {question[:50]}... - سيتم الرد بدون استرجاع مستندات")
+            # الإجابة على السؤال العام بدون سياق
+            full_context = ""
+            retrieved_docs = []
+            reranked_docs = []
+            retrieved_count = 0
+            reranked_count = 0
+            chunks_used = 0
+            
+            # توليد الإجابة بدون سياق
+            answer = await self.llm.generate(
+                question=question,
+                context="",
+                temperature=temperature,
+                system_prompt=kwargs.get("system_prompt") or self._get_general_system_prompt()
+            )
+            
+            confidence_score = 0.8  # ثقة عالية في الأسئلة العامة
+            sources = []
+            
         else:
-            full_context = built_context
-        
-        # ✅ اقتصاص السياق الكامل إذا كان كبيراً جداً (حماية إضافية)
-        if len(full_context) > 3000:
-            full_context = full_context[:3000] + "\n...(تم اختصار السياق لتقليل حجم الطلب)"
-        
-        chunks_used = len(reranked_docs)
-        
-        # 6. توليد الإجابة
-        answer = await self.llm.generate(
-            question=question,
-            context=full_context,
-            temperature=temperature,
-            system_prompt=kwargs.get("system_prompt")
-        )
-        
-        # 7. حساب درجة الثقة
-        confidence_score = self._calculate_confidence(
-            reranked_docs,
-            len(answer),
-            chunks_used
-        )
-        
-        # 8. تجهيز المصادر
-        sources = []
-        if include_sources:
-            sources = self._format_sources(reranked_docs)
+            # 2. تحسين السؤال (للأسئلة العادية)
+            enhanced_question = self._enhance_question(question)
+            
+            # 3. استرجاع المستندات
+            retrieved_docs = await self.retriever.retrieve(
+                query=enhanced_question,
+                top_k=top_k,
+                filter_category=filter_category,
+                filter_supplier=filter_supplier
+            )
+            
+            retrieved_count = len(retrieved_docs)
+            logger.info(f"📚 Retrieved {retrieved_count} documents")
+            
+            # 4. إعادة ترتيب النتائج
+            reranked_docs = await self.reranker.rerank(
+                query=question,
+                documents=retrieved_docs,
+                top_k=max_sources
+            )
+            
+            reranked_count = len(reranked_docs)
+            logger.info(f"📊 Reranked to {reranked_count} documents")
+            
+            # 5. بناء السياق
+            built_context = self._build_context(reranked_docs)
+            
+            # دمج السياق الإضافي (من المحادثة السابقة)
+            if context and context.strip():
+                full_context = f"سياق المحادثة السابقة:\n{context}\n\nمعلومات من المستندات:\n{built_context}"
+            else:
+                full_context = built_context
+            
+            # ✅ اقتصاص السياق الكامل إذا كان كبيراً جداً (حماية إضافية)
+            if len(full_context) > 3000:
+                full_context = full_context[:3000] + "\n...(تم اختصار السياق لتقليل حجم الطلب)"
+            
+            chunks_used = len(reranked_docs)
+            
+            # 6. توليد الإجابة
+            answer = await self.llm.generate(
+                question=question,
+                context=full_context,
+                temperature=temperature,
+                system_prompt=kwargs.get("system_prompt")
+            )
+            
+            # 7. حساب درجة الثقة
+            confidence_score = self._calculate_confidence(
+                reranked_docs,
+                len(answer),
+                chunks_used
+            )
+            
+            # 8. تجهيز المصادر
+            sources = []
+            if include_sources:
+                sources = self._format_sources(reranked_docs)
         
         # 9. حساب زمن المعالجة
         processing_time = time.time() - start_time
@@ -197,7 +222,8 @@ class QAEngine:
                 "top_k": top_k,
                 "max_sources": max_sources,
                 "filter_category": filter_category,
-                "filter_supplier": filter_supplier
+                "filter_supplier": filter_supplier,
+                "is_general_question": is_general_question
             }
         )
         
@@ -433,6 +459,74 @@ class QAEngine:
             preview = preview[:last_space]
         
         return preview + "..."
+    
+    # ============================================================
+    # ✅ طرق جديدة للكشف عن الأسئلة العامة
+    # ============================================================
+    
+    def _is_general_question(self, question: str) -> bool:
+        """
+        التحقق مما إذا كان السؤال عاماً (لا يحتاج إلى استرجاع مستندات)
+        
+        Args:
+            question: السؤال
+            
+        Returns:
+            True إذا كان السؤال عاماً، False إذا كان يحتاج إلى مستندات
+        """
+        question_lower = question.lower().strip()
+        
+        # قائمة الكلمات والعبارات التي تشير إلى أسئلة عامة
+        general_patterns = [
+            "السلام عليكم",
+            "وعليكم السلام",
+            "صباح الخير",
+            "مساء الخير",
+            "مرحبا",
+            "اهلا",
+            "كيف حالك",
+            "شكرا",
+            "thank you",
+            "hello",
+            "hi",
+            "good morning",
+            "good evening",
+            "how are you",
+            "مع السلامة",
+            "باي",
+            "bye"
+        ]
+        
+        # التحقق من تطابق السؤال مع أي من الأنماط العامة
+        for pattern in general_patterns:
+            if pattern in question_lower:
+                return True
+        
+        # إذا كان السؤال قصيراً جداً (أقل من 3 كلمات) ولا يحتوي على كلمات مفتاحية
+        if len(question.split()) <= 2:
+            # التحقق مما إذا كانت الكلمات مفتاحية للمشتريات
+            keywords = self._extract_keywords(question)
+            if len(keywords) == 0:
+                return True
+        
+        return False
+    
+    def _get_general_system_prompt(self) -> str:
+        """
+        الحصول على توجيه النظام للأسئلة العامة
+        
+        Returns:
+            توجيه النظام للأسئلة العامة
+        """
+        return """أنت مساعد ذكي ومحترم.
+المستخدم يوجه لك تحية أو سؤالاً عاماً.
+التعليمات:
+1. رد بتحية مناسبة ومهذبة
+2. استخدم اللغة العربية الفصحى
+3. كن ودوداً ومحترماً
+4. ذكر المستخدم بأنك هنا لمساعدته في أسئلة المشتريات والعقود والموردين
+5. اقترح عليه طرح سؤال محدد عن المستندات المتاحة
+"""
     
     # ============================================================
     # طرق مساعدة
