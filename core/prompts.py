@@ -1,4 +1,4 @@
-# app/core/prompts.py
+# core/prompts.py
 """
 📝 النماذج التوجيهية (Prompts) للنماذج اللغوية
 
@@ -169,7 +169,7 @@ QUESTION_PROMPTS = {
 
 SYSTEM_PROMPTS = {
     "default": """
-أنت مساعد ProcureMind-AI، نظام ذكاء اصطناعي متخصص في المشتريات.
+أنت مساعد SmartRetriever، نظام ذكاء اصطناعي متخصص في المشتريات.
 تحدث باللغة العربية الفصحى.
 كن مفيداً ودقيقاً ومحترفاً.
 """,
@@ -207,12 +207,12 @@ SYSTEM_PROMPTS = {
 def get_prompt(prompt_type: str, prompt_name: str, **kwargs) -> str:
     """
     الحصول على نموذج توجيهي معين
-    
+
     Args:
         prompt_type: نوع النموذج (rag, question, system)
         prompt_name: اسم النموذج
         **kwargs: المتغيرات للاستبدال في النموذج
-        
+
     Returns:
         النموذج التوجيهي المعبأ
     """
@@ -221,15 +221,15 @@ def get_prompt(prompt_type: str, prompt_name: str, **kwargs) -> str:
         "question": QUESTION_PROMPTS,
         "system": SYSTEM_PROMPTS
     }
-    
+
     if prompt_type not in prompts:
         raise ValueError(f"نوع النموذج غير معروف: {prompt_type}")
-    
+
     if prompt_name not in prompts[prompt_type]:
         raise ValueError(f"النموذج غير موجود: {prompt_name}")
-    
+
     template = prompts[prompt_type][prompt_name]
-    
+
     # استبدال المتغيرات
     try:
         return template.format(**kwargs)
@@ -240,11 +240,11 @@ def get_prompt(prompt_type: str, prompt_name: str, **kwargs) -> str:
 def get_rag_prompt(prompt_name: str = "system", **kwargs) -> str:
     """
     الحصول على نموذج RAG
-    
+
     Args:
         prompt_name: اسم النموذج
         **kwargs: المتغيرات للاستبدال
-        
+
     Returns:
         النموذج التوجيهي المعبأ
     """
@@ -254,10 +254,10 @@ def get_rag_prompt(prompt_name: str = "system", **kwargs) -> str:
 def get_system_prompt(prompt_name: str = "default") -> str:
     """
     الحصول على نموذج النظام
-    
+
     Args:
         prompt_name: اسم النموذج
-        
+
     Returns:
         النموذج التوجيهي للنظام
     """
@@ -271,12 +271,12 @@ def get_question_prompt(
 ) -> str:
     """
     الحصول على نموذج سؤال حسب التصنيف
-    
+
     Args:
         question: السؤال
         context: السياق
         category: التصنيف (contract, supplier, quality, price, general)
-        
+
     Returns:
         النموذج التوجيهي المعبأ
     """
@@ -293,41 +293,24 @@ def get_question_prompt(
 
 def get_comparison_prompt(comparison_type: str, **kwargs) -> str:
     """
-    الحصول على نموذج مقارنة
-    
-    Args:
-        comparison_type: نوع المقارنة (suppliers, contracts, quotations)
-        **kwargs: المتغيرات للاستبدال
-        
-    Returns:
-        النموذج التوجيهي المعبأ
+    ملحوظة: لسه مفيش قاموس COMPARISON_PROMPTS معرّف في الملف ده.
+    الدالة دي هتفشل حاليًا لو اتنادت. لو مش مستخدمة فعليًا في المشروع
+    ينفع تتشال، أو نضيف قاموس COMPARISON_PROMPTS بمحتوى مناسب لاحقًا.
     """
     return get_prompt("comparison", comparison_type, **kwargs)
 
 
 def get_summary_prompt(summary_type: str, text: str) -> str:
     """
-    الحصول على نموذج تلخيص
-    
-    Args:
-        summary_type: نوع التلخيص (document, contract, supplier)
-        text: النص المراد تلخيصه
-        
-    Returns:
-        النموذج التوجيهي المعبأ
+    ملحوظة: لسه مفيش قاموس SUMMARY_PROMPTS معرّف في الملف ده.
+    نفس ملاحظة get_comparison_prompt أعلاه.
     """
     return get_prompt("summary", summary_type, text=text)
 
 
 def get_analysis_prompt(analysis_type: str, **kwargs) -> str:
     """
-    الحصول على نموذج تحليل
-    
-    Args:
-        analysis_type: نوع التحليل (risk, trend, performance)
-        **kwargs: المتغيرات للاستبدال
-        
-    Returns:
-        النموذج التوجيهي المعبأ
+    ملحوظة: لسه مفيش قاموس ANALYSIS_PROMPTS معرّف في الملف ده.
+    نفس ملاحظة get_comparison_prompt أعلاه.
     """
     return get_prompt("analysis", analysis_type, **kwargs)
