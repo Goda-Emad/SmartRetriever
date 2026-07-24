@@ -1,39 +1,57 @@
-# app/components/__init__.py
+# components/__init__.py
 """
 🧩 مكونات مشتركة - Shared Components
-
-تحتوي على مكونات قابلة لإعادة الاستخدام في جميع أنحاء التطبيق
+مكونات قابلة لإعادة الاستخدام في جميع أنحاء التطبيق
 """
 
-from .sidebar import render_sidebar
-from .chat_utils import (
-    render_chat_message,
-    render_sources,
-    render_suggested_questions,
-    render_chat_input
+from .sidebar import (
+    render_sidebar,
+    render_stats_only,
+    render_navigation_only,
+    render_user_info,
+    render_progress_in_sidebar,
+    render_system_status,
 )
 
-# تعريف ما يتم تصديره عند استيراد الوحدة
+from .chat_utils import (
+    render_chat_message,
+    render_messages,
+    render_sources,
+    render_suggested_questions,
+    render_chat_input,
+    render_loading_indicator,
+    render_error,
+    render_success,
+    render_warning,
+    render_info,
+    render_source_card,
+    render_progress,
+    format_message_content,
+)
+
 __all__ = [
-    # القائمة الجانبية
+    # sidebar
     'render_sidebar',
-    
-    # أدوات المحادثة
+    'render_stats_only',
+    'render_navigation_only',
+    'render_user_info',
+    'render_progress_in_sidebar',
+    'render_system_status',
+    # chat_utils
     'render_chat_message',
+    'render_messages',
     'render_sources',
     'render_suggested_questions',
-    'render_chat_input'
+    'render_chat_input',
+    'render_loading_indicator',
+    'render_error',
+    'render_success',
+    'render_warning',
+    'render_info',
+    'render_source_card',
+    'render_progress',
+    'format_message_content',
 ]
 
-# معلومات الوحدة
 __version__ = "1.0.0"
-__description__ = "ProcureMind-AI Components - مكونات مشتركة للتطبيق"
-
-# قائمة المكونات المتاحة
-COMPONENTS = {
-    "sidebar": "القائمة الجانبية للتطبيق",
-    "chat_message": "عرض رسالة في المحادثة",
-    "sources": "عرض المصادر",
-    "suggested_questions": "عرض الأسئلة المقترحة",
-    "chat_input": "مدخل النص للمحادثة"
-}
+__description__ = "SmartRetriever Components - مكونات مشتركة"
