@@ -1,4 +1,3 @@
-# app/rag/qa_engine.py
 """
 🧠 محرك الأسئلة والأجوبة (QA Engine)
 
@@ -57,7 +56,7 @@ class QAEngine:
         retriever: Optional[Retriever] = None,
         reranker: Optional[Reranker] = None,
         chunking: Optional[Chunking] = None,
-        llm: Optional[GrokClient] = None
+        llm: Optional[GroqClient] = None
     ):
         """
         تهيئة محرك الأسئلة والأجوبة
@@ -71,7 +70,7 @@ class QAEngine:
         self.retriever = retriever or Retriever()
         self.reranker = reranker or Reranker()
         self.chunking = chunking or Chunking()
-        self.llm = llm or GrokClient()
+        self.llm = llm or GroqClient()  # ✅ تم التصحيح: GroqClient بدلاً من GrokClient
         
         self.default_top_k = settings.DEFAULT_TOP_K
         self.default_max_sources = settings.DEFAULT_MAX_SOURCES
