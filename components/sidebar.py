@@ -1,12 +1,12 @@
 """
-📌 القائمة الجانبية - Modern SaaS Sidebar Component
+📌 القائمة الجانبية - Modern SaaS Sidebar Component (Fixed UnboundLocalError)
 """
 
 import streamlit as st
 from typing import Optional, Dict, Any
 
 # ============================================================
-# ⚙️ إعدادات الصفحات المجهزة داخل البطاقة الجانبية
+# ⚙️ إعدادات الصفحات
 # ============================================================
 PAGES = {
     "💬 المساعد الذكي": "💬",
@@ -30,7 +30,7 @@ def render_sidebar(
 ) -> str:
     """عرض القائمة الجانبية الكاملة وإرجاع اسم الصفحة المحددة."""
     
-    # 1. تهيئة حالة الجلسة (Session State)
+    # 1. تهيئة حالة الجلسة
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = True
 
@@ -38,6 +38,11 @@ def render_sidebar(
         st.session_state.current_page = DEFAULT_PAGE
 
     is_dark = st.session_state.dark_mode
+
+    # ✅ حل المشكلة: تعريف المتغيرات في البداية لتكون متاحة للدالة بالكامل
+    card_bg = "rgba(30, 41, 59, 0.7)" if is_dark else "rgba(241, 245, 249, 0.9)"
+    card_border = "rgba(255, 255, 255, 0.1)" if is_dark else "rgba(0, 0, 0, 0.08)"
+    text_sub = "#94A3B8" if is_dark else "#64748B"
 
     with st.sidebar:
         # ✅ الشعار وهوية التطبيق
@@ -55,24 +60,18 @@ def render_sidebar(
         
         st.markdown("---")
 
-        # ✅ زر تبديل الوضع (ليلي / فاتح) - يعمل بنسبة 100%
+        # ✅ زر تبديل الوضع (ليلي / فاتح)
         if show_theme_toggle:
             btn_label = "☀️ الوضع الفاتح" if is_dark else "🌙 الوضع الداكن"
             
-            # زر Streamlit تفاعلي مع إعادة التحميل الآلية
             if st.button(btn_label, use_container_width=True, key="theme_toggle_btn"):
                 st.session_state.dark_mode = not st.session_state.dark_mode
                 st.rerun()
 
             st.markdown("---")
 
-        # ✅ بطاقة مساحة العمل + الصفحات (Workspace & Navigation Card)
+        # ✅ بطاقة مساحة العمل + الصفحات
         if show_navigation:
-            # 1. بطاقة عنوان الـ APP / Workspace (بديل كلمة app العادية)
-            card_bg = "rgba(30, 41, 59, 0.7)" if is_dark else "rgba(241, 245, 249, 0.9)"
-            card_border = "rgba(255, 255, 255, 0.1)" if is_dark else "rgba(0, 0, 0, 0.08)"
-            text_sub = "#94A3B8" if is_dark else "#64748B"
-
             st.markdown(f"""
             <div style="
                 background: {card_bg};
@@ -103,7 +102,6 @@ def render_sidebar(
             </div>
             """, unsafe_allow_html=True)
             
-            # 2. عرض الصفحات كأزرار داخل القائمة
             for page_name, icon in PAGES.items():
                 is_active = (st.session_state.current_page == page_name)
                 
@@ -118,11 +116,11 @@ def render_sidebar(
             
             st.markdown("---")
 
-        # ✅ الإحصائيات (KPI Metric Cards)
+        # ✅ الإحصائيات
         if show_stats:
             _render_stats(stats, is_dark)
 
-        # ✅ تذييل القائمة (Footer)
+        # ✅ تذييل القائمة (كان يسبب الخطأ بسبب card_border)
         st.markdown(f"""
         <div style="
             margin-top: 1.5rem;
@@ -141,7 +139,7 @@ def render_sidebar(
 
 
 # ============================================================
-# 2. الدوال المساعدة المساندة (تضمن عدم حدوث ImportError)
+# 2. الدوال المساعدة المساندة
 # ============================================================
 
 def render_stats_only(stats: Dict[str, Any]) -> None:
@@ -197,7 +195,7 @@ def render_system_status(status: str = "🟢 يعمل", uptime: str = "غير م
 
 
 # ============================================================
-# helper داخلي - بطاقات الإحصائيات الفخمة
+# helper داخلي - بطاقات الإحصائيات
 # ============================================================
 
 def _render_stats(stats: Optional[Dict[str, Any]], is_dark: bool = True) -> None:
@@ -260,7 +258,7 @@ def _render_stats(stats: Optional[Dict[str, Any]], is_dark: bool = True) -> None
 
 
 # ============================================================
-# تصدير الدوال الكامل لتفادي أخطاء الاستيراد
+# تصدير الدوال
 # ============================================================
 
 __all__ = [
