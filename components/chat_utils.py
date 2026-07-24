@@ -1,12 +1,11 @@
-# app/components/chat_utils.py
+# components/chat_utils.py
 """
 💬 أدوات المحادثة - Chat Utilities
-
-تحتوي على دوال مساعدة لعرض مكونات المحادثة في Streamlit
+دوال مساعدة لعرض مكونات المحادثة في Streamlit
 """
 
 import streamlit as st
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 import time
 
 
@@ -19,23 +18,12 @@ def render_chat_message(
     is_last: bool = False,
     show_sources: bool = True
 ) -> None:
-    """
-    عرض رسالة واحدة في المحادثة
-    
-    Args:
-        message: بيانات الرسالة (role, content, sources)
-        is_last: هل هي آخر رسالة
-        show_sources: عرض المصادر
-    """
     role = message.get("role", "user")
     content = message.get("content", "")
     sources = message.get("sources", [])
-    
-    # عرض الرسالة في فقاعة المحادثة
+
     with st.chat_message(role):
         st.markdown(content)
-        
-        # عرض المصادر
         if show_sources and sources and role == "assistant":
             render_sources(sources)
 
@@ -44,13 +32,6 @@ def render_messages(
     messages: List[Dict[str, Any]],
     show_sources: bool = True
 ) -> None:
-    """
-    عرض جميع الرسائل في المحادثة
-    
-    Args:
-        messages: قائمة الرسائل
-        show_sources: عرض المصادر
-    """
     for i, message in enumerate(messages):
         is_last = (i == len(messages) - 1)
         render_chat_message(message, is_last, show_sources)
@@ -61,44 +42,30 @@ def render_messages(
 # ============================================================
 
 def render_sources(sources: List[Dict[str, Any]]) -> None:
-    """
-    عرض المصادر المستخدمة في الإجابة
-    
-    Args:
-        sources: قائمة المصادر
-    """
     if not sources:
         return
-    
+
     with st.expander(f"📎 المصادر ({len(sources)})"):
         for i, source in enumerate(sources, 1):
-            # معلومات المصدر
             filename = source.get("filename", "مصدر غير معروف")
             score = source.get("relevance_score", 0)
             content = source.get("content", "")
             category = source.get("category", "غير مصنف")
-            
-            # عرض بطاقة المصدر
+
             col1, col2 = st.columns([4, 1])
-            
+
             with col1:
                 st.markdown(f"**{i}. {filename}**")
                 st.caption(f"📂 {category}")
                 if content:
                     preview = content[:200] + "..." if len(content) > 200 else content
                     st.text(preview)
-            
+
             with col2:
-                # درجة المطابقة
                 score_percent = int(score * 100)
-                if score_percent >= 80:
-                    color = "🟢"
-                elif score_percent >= 50:
-                    color = "🟡"
-                else:
-                    color = "🔴"
+                color = "🟢" if score_percent >= 80 else ("🟡" if score_percent >= 50 else "🔴")
                 st.metric("المطابقة", f"{color} {score_percent}%")
-            
+
             st.divider()
 
 
@@ -108,25 +75,15 @@ def render_sources(sources: List[Dict[str, Any]]) -> None:
 
 def render_suggested_questions(
     questions: List[str],
-    on_click: Optional[callable] = None,
+    on_click: Optional[Callable[[str], None]] = None,
     cols: int = 2
 ) -> None:
-    """
-    عرض الأسئلة المقترحة
-    
-    Args:
-        questions: قائمة الأسئلة
-        on_click: دالة عند النقر على سؤال
-        cols: عدد الأعمدة
-    """
     if not questions:
         return
-    
+
     st.markdown("### 💡 أسئلة مقترحة")
-    
-    # تقسيم الأسئلة على أعمدة
     columns = st.columns(cols)
-    
+
     for i, question in enumerate(questions):
         with columns[i % cols]:
             if st.button(question, use_container_width=True, key=f"suggested_{i}"):
@@ -135,7 +92,7 @@ def render_suggested_questions(
 
 
 # ============================================================
-# 4. عرض مدخل النص
+# 4. مدخل النص
 # ============================================================
 
 def render_chat_input(
@@ -143,17 +100,6 @@ def render_chat_input(
     disabled: bool = False,
     key: str = "chat_input"
 ) -> Optional[str]:
-    """
-    عرض مدخل النص للمحادثة
-    
-    Args:
-        placeholder: النص الظاهر في المدخل
-        disabled: تعطيل المدخل
-        key: مفتاح فريد للمدخل
-        
-    Returns:
-        النص المدخل أو None
-    """
     return st.chat_input(
         placeholder=placeholder,
         disabled=disabled,
@@ -162,90 +108,38 @@ def render_chat_input(
 
 
 # ============================================================
-# 5. عرض مؤشر التحميل
+# 5-9. رسائل الحالة
 # ============================================================
 
 def render_loading_indicator(message: str = "🤔 جاري البحث والتفكير...") -> None:
-    """
-    عرض مؤشر التحميل
-    
-    Args:
-        message: رسالة التحميل
-    """
     with st.spinner(message):
-        time.sleep(0.5)  # لإعطاء تأثير بصري
+        time.sleep(0.5)
 
-
-# ============================================================
-# 6. عرض حالة خطأ
-# ============================================================
 
 def render_error(message: str) -> None:
-    """
-    عرض رسالة خطأ
-    
-    Args:
-        message: رسالة الخطأ
-    """
     st.error(f"❌ {message}")
 
 
-# ============================================================
-# 7. عرض حالة نجاح
-# ============================================================
-
 def render_success(message: str) -> None:
-    """
-    عرض رسالة نجاح
-    
-    Args:
-        message: رسالة النجاح
-    """
     st.success(f"✅ {message}")
 
 
-# ============================================================
-# 8. عرض حالة تحذير
-# ============================================================
-
 def render_warning(message: str) -> None:
-    """
-    عرض رسالة تحذير
-    
-    Args:
-        message: رسالة التحذير
-    """
     st.warning(f"⚠️ {message}")
 
 
-# ============================================================
-# 9. عرض معلومات
-# ============================================================
-
 def render_info(message: str) -> None:
-    """
-    عرض رسالة معلومات
-    
-    Args:
-        message: رسالة المعلومات
-    """
     st.info(f"ℹ️ {message}")
 
 
 # ============================================================
-# 10. عرض بطاقة المصدر (نسخة مبسطة)
+# 10. بطاقة مصدر مبسطة
 # ============================================================
 
 def render_source_card(source: Dict[str, Any]) -> None:
-    """
-    عرض بطاقة مصدر واحدة (نسخة مبسطة)
-    
-    Args:
-        source: بيانات المصدر
-    """
     filename = source.get("filename", "مصدر غير معروف")
     score = source.get("relevance_score", 0)
-    
+
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown(f"**{filename}**")
@@ -254,64 +148,44 @@ def render_source_card(source: Dict[str, Any]) -> None:
 
 
 # ============================================================
-# 11. عرض تقدم المعالجة
+# 11. شريط التقدم
 # ============================================================
 
 def render_progress(progress: float, text: str = "جاري المعالجة...") -> None:
-    """
-    عرض شريط تقدم
-    
-    Args:
-        progress: نسبة التقدم (0-100)
-        text: نص التقدم
-    """
-    st.progress(progress / 100)
+    st.progress(min(max(progress / 100, 0.0), 1.0))
     st.caption(f"{text} ({int(progress)}%)")
 
 
 # ============================================================
-# 12. تنسيق النص
+# 12. تنسيق النص - مُصلح (IndexError على السطر الفاضي)
 # ============================================================
 
 def format_message_content(content: str) -> str:
-    """
-    تنسيق محتوى الرسالة (إضافة تنسيقات Markdown)
-    
-    Args:
-        content: النص الأصلي
-        
-    Returns:
-        النص المنسق
-    """
     if not content:
         return ""
-    
-    # إضافة تنسيق للعناوين
+
     lines = content.split("\n")
     formatted = []
-    
+
     for line in lines:
-        # العناوين
-        if line.startswith("## "):
+        if not line.strip():
+            formatted.append(line)
+        elif line.startswith("## "):
             formatted.append(f"### {line[3:]}")
         elif line.startswith("### "):
             formatted.append(f"#### {line[4:]}")
-        # النقاط
-        elif line.startswith("- "):
+        elif line.startswith(("- ", "* ")):
             formatted.append(f"• {line[2:]}")
-        elif line.startswith("* "):
-            formatted.append(f"• {line[2:]}")
-        # الأرقام
-        elif line[0].isdigit() and "." in line[:3]:
+        elif len(line) >= 2 and line[0].isdigit() and "." in line[:3]:
             formatted.append(line)
         else:
             formatted.append(line)
-    
+
     return "\n".join(formatted)
 
 
 # ============================================================
-# 13. تصدير الدوال
+# تصدير الدوال
 # ============================================================
 
 __all__ = [
@@ -327,5 +201,5 @@ __all__ = [
     'render_info',
     'render_source_card',
     'render_progress',
-    'format_message_content'
+    'format_message_content',
 ]
