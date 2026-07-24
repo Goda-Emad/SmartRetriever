@@ -136,18 +136,21 @@ def init_session_state():
 init_session_state()
 
 # ============================================================
-# ⚡ بناء الفهرس الذكي تلقائياً
+# ⚡ بناء الفهرس الذكي تلقائياً (باستخدام Chroma)
 # ============================================================
-@st.cache_resource(show_spinner="⏳ Checking & Building FAISS Index...")
+@st.cache_resource(show_spinner="⏳ Checking & Building Chroma Index...")
 def build_index_if_needed():
     import asyncio
+    from database.chroma_loader import ChromaLoader  # ✅ استخدام Chroma
     
-    index_path = settings.FAISS_INDEX_PATH / "index.faiss"
-    if index_path.exists():
-        logger.info("✅ FAISS index already exists")
+    # ✅ التحقق من وجود بيانات في Chroma
+    chroma_loader = ChromaLoader()
+    
+    if chroma_loader.get_index_size() > 0:
+        logger.info(f"✅ Chroma index already exists with {chroma_loader.get_index_size()} documents")
         return True
     
-    logger.info("🔨 Building FAISS index...")
+    logger.info("🔨 Building Chroma index...")
     try:
         from scripts.build_index import build_index
         loop = asyncio.new_event_loop()
@@ -259,7 +262,7 @@ def show_home():
     with st.expander(T['sys_info_title'], expanded=False):
         ec1, ec2 = st.columns(2)
         with ec1:
-            st.code(f"FAISS Path: {settings.FAISS_INDEX_PATH}", language="text")
+            st.code(f"Chroma Path: {settings.CHROMA_PATH}", language="text")  # ✅ تغيير إلى Chroma
             st.code(f"Docs Path: {settings.KNOWLEDGE_BASE_PATH}", language="text")
         with ec2:
             st.code(f"LLM Model: {settings.GROQ_MODEL}", language="text")
