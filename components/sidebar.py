@@ -2,7 +2,7 @@ import streamlit as st
 from pathlib import Path
 
 # ============================================================
-# 🌐 قاموس اللغات (قاموس النصوص المترجمة)
+# 🌐 قاموس اللغات (Translations Dictionary)
 # ============================================================
 TRANSLATIONS = {
     "ar": {
@@ -38,61 +38,134 @@ TRANSLATIONS = {
 }
 
 # ============================================================
-# 🎨 حقن CSS للوضع الفاتح والداكن تلقائياً
+# 🎨 تطبيق التنسيق الديناميكي للثيم (Dynamic Theme Injector)
 # ============================================================
 def apply_dynamic_theme():
-    """تطبيق الثيم المطلوب (فاتح/داكن) فورياً عبر CSS"""
+    """تطبيق الثيم (فاتح/داكن) مع ضبط تباين الألوان لكافة العناصر والبطاقات"""
     if st.session_state.get("dark_mode", True):
-        # 🌙 CSS الوضع الداكن
+        # 🌙 الوضع الداكن (Dark Mode)
         st.markdown("""
         <style>
-            .stApp { background-color: #0B0F19 !important; color: #E2E8F0 !important; }
-            [data-testid="stSidebar"] { background-color: #111827 !important; }
-            .stChatMessage, .hero-banner, .chat-header {
+            /* خلفية التطبيق والسايدبار */
+            .stApp { background-color: #0B0F19 !important; color: #F8FAFC !important; }
+            [data-testid="stSidebar"] { background-color: #111827 !important; border-right: 1px solid rgba(255, 255, 255, 0.08) !important; }
+            [data-testid="stSidebar"] * { color: #CBD5E1 !important; }
+            
+            /* الهيدر والبانر الرئيسي */
+            .doc-header, .chat-header, .hero-banner {
+                background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%) !important;
+                border: 1px solid rgba(99, 102, 241, 0.3) !important;
+                color: #FFFFFF !important;
+            }
+            .doc-header h2, .doc-header p, .chat-header h2, .chat-header p, .hero-banner h1, .hero-banner p { 
+                color: #FFFFFF !important; 
+            }
+
+            /* بطاقات الإحصائيات والكروت */
+            .metric-card, .doc-card, div[data-testid="stMetric"] {
                 background-color: #1E293B !important;
                 border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+            }
+            div[data-testid="stMetricValue"] { color: #38BDF8 !important; }
+            div[data-testid="stMetricLabel"] { color: #94A3B8 !important; }
+
+            /* المدخلات والقوائم المنسدلة */
+            .stTextInput input, div[data-baseweb="select"] > div {
+                background-color: #182232 !important;
                 color: #FFFFFF !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            
+            /* الأزرار العامة */
+            .stButton > button {
+                background-color: #1E293B !important;
+                color: #F8FAFC !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            }
+            .stButton > button:hover {
+                border-color: #38BDF8 !important;
+                color: #38BDF8 !important;
             }
         </style>
         """, unsafe_allow_html=True)
     else:
-        # ☀️ CSS الوضع الفاتح
+        # ☀️ الوضع الفاتح (Light Mode - إبراز كافة النصوص والبطاقات)
         st.markdown("""
         <style>
+            /* خلفية التطبيق والسايدبار */
             .stApp { background-color: #F8FAFC !important; color: #0F172A !important; }
             [data-testid="stSidebar"] { background-color: #FFFFFF !important; border-right: 1px solid #E2E8F0 !important; }
-            .stChatMessage, .hero-banner, .chat-header, .metric-card {
+            [data-testid="stSidebar"] * { color: #334155 !important; }
+
+            /* الهيدر والبانر الرئيسي */
+            .doc-header, .chat-header, .hero-banner {
+                background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%) !important;
+                border: 1px solid #C7D2FE !important;
+                color: #1E1B4B !important;
+            }
+            .doc-header h2, .chat-header h2, .hero-banner h1 { color: #1E1B4B !important; }
+            .doc-header p, .chat-header p, .hero-banner p { color: #3730A3 !important; }
+
+            /* بطاقات الإحصائيات والكروت */
+            .metric-card, .doc-card, div[data-testid="stMetric"] {
+                background-color: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03) !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+            }
+            div[data-testid="stMetricValue"] { color: #0284C7 !important; }
+            div[data-testid="stMetricLabel"] { color: #64748B !important; }
+
+            /* المدخلات والقوائم المنسدلة */
+            .stTextInput input, div[data-baseweb="select"] > div {
                 background-color: #FFFFFF !important;
                 color: #0F172A !important;
-                border: 1px solid #CBD5E1 !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+                border-color: #CBD5E1 !important;
             }
-            h1, h2, h3, h4, h5, h6, p, span, label, div { color: #0F172A !important; }
-            .stButton > button { background-color: #F1F5F9 !important; color: #0F172A !important; border: 1px solid #CBD5E1 !important; }
+
+            /* الأزرار العامة */
+            .stButton > button {
+                background-color: #FFFFFF !important;
+                color: #1E293B !important;
+                border: 1px solid #CBD5E1 !important;
+            }
+            .stButton > button:hover {
+                background-color: #F1F5F9 !important;
+                border-color: #0284C7 !important;
+                color: #0284C7 !important;
+            }
+
+            /* العناوين والنصوص الإضافية */
+            h1, h2, h3, h4, h5, h6, p, span, label, div {
+                color: #0F172A;
+            }
         </style>
         """, unsafe_allow_html=True)
 
 # ============================================================
-# 🖥️ مكون القائمة الجانبية الرئيسي
+# 🖥️ المكون الرئيسي للسايدبار (Render Sidebar)
 # ============================================================
 def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_navigation=True):
-    """عرض السايدبار الموحد مع التوجيه واللغات والثيمات"""
+    """عرض القائمة الجانبية الموحدة للتطبيق"""
     
-    # 1. تهيئة متغيرة الجلسة للثيم واللغة
+    # 1. تهيئة حالة الجلسة للثيم واللغة
     if "dark_mode" not in st.session_state:
         st.session_state.dark_mode = True
     if "lang" not in st.session_state:
         st.session_state.lang = "ar"
 
-    # تطبيق الثيم الحالي
+    # 2. تطبيق الثيم الديناميكي حسب الاختيار الحالي
     apply_dynamic_theme()
     
-    # جلب النصوص المترجمة للغة الحالية
+    # 3. جلب النصوص المترجمة
     lang_code = st.session_state.lang
     T = TRANSLATIONS.get(lang_code, TRANSLATIONS["ar"])
 
     with st.sidebar:
-        # Branding / الهوية
+        # 🏷️ الهوية واللوجو
         st.markdown(f"""
         <div style="text-align: center; padding: 10px 0 15px 0;">
             <h2 style="margin: 0; font-weight: 800; font-size: 1.4rem;">🧠 SmartRetriever</h2>
@@ -102,7 +175,7 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
 
         st.markdown("---")
 
-        # 2. 🔀 التنقل الفعلي السلس بين الصفحات (بدون مشاكل التعليق)
+        # 🔀 التنقل الفوري بين الصفحات
         if show_navigation:
             st.page_link("app.py", label=T["home"], icon="🏠")
             st.page_link("pages/1_Chat.py", label=T["chat"], icon="💬")
@@ -110,7 +183,7 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
             st.page_link("pages/3_Analytics.py", label=T["analytics"], icon="📊")
             st.markdown("---")
 
-        # 3. 📊 عرض الإحصائيات (إن وجدت)
+        # 📊 عرض الإحصائيات (إن وجدت)
         if show_stats and stats:
             st.markdown(f"##### {T['stats_title']}")
             st.caption(f"📄 {T['docs_count']}: {stats.get('documents', 0)}")
@@ -119,7 +192,7 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
             st.caption(f"⭐ {T['quality_rate']}: {stats.get('quality', 0)}%")
             st.markdown("---")
 
-        # 4. ⚙️ أزرار التحكم بالثيم واللغة
+        # ⚙️ أزرار التحكم بالثيم واللغة
         col_theme, col_lang = st.columns(2)
 
         with col_theme:
@@ -134,10 +207,10 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
                 st.session_state.lang = "en" if st.session_state.lang == "ar" else "ar"
                 st.rerun()
 
-        # روابط التواصل الاجتماعية السفليّة
+        # 🔗 روابط التواصل والتحقوق السفليّة
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("""
-        <div style="font-size: 0.75rem; color: #64748B; text-align: center;">
+        <div style="font-size: 0.75rem; text-align: center; opacity: 0.7;">
             📦 AutoData · 2024-2026<br>
             <a href="https://github.com" target="_blank" style="color: #38BDF8; text-decoration: none;">GitHub</a> | 
             <a href="https://linkedin.com" target="_blank" style="color: #38BDF8; text-decoration: none;">LinkedIn</a>
