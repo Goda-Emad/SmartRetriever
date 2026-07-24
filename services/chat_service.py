@@ -1,4 +1,3 @@
-# services/chat_service.py
 import uuid
 import asyncio
 from typing import List, Dict, Any, Optional
@@ -43,7 +42,7 @@ class ChatService:
         self,
         question: str,
         session_id: Optional[str] = None,
-        max_sources: int = 5,
+        max_sources: int = 3,  # ✅ تم التخفيض من 5 إلى 3
         temperature: float = 0.7,
         include_sources: bool = True,
         filter_category: Optional[str] = None,
@@ -64,6 +63,11 @@ class ChatService:
 
         try:
             context = self._get_conversation_context(session_id, max_messages=3)
+            
+            # ✅ اقتصاص السياق إذا كان كبيراً جداً
+            if context and len(context) > 2000:
+                context = context[:2000] + "\n...(تم اختصار سياق المحادثة السابقة)"
+            
             result = await self.qa_engine.answer(
                 question=question,
                 max_sources=max_sources,
@@ -161,3 +165,4 @@ class ChatService:
 
     def get_stats(self) -> Dict[str, Any]:
         return {**self.stats, "active_conversations": len(self.conversations)}
+
