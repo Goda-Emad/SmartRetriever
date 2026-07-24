@@ -1,5 +1,5 @@
 """
-🔨 بناء فهرس FAISS من knowledge_base
+🔨 بناء فهرس Chroma من knowledge_base
 يشتغل تلقائياً عند بدء التطبيق لو الفهرس مش موجود
 """
 
@@ -12,12 +12,12 @@ sys.path.append(str(Path(__file__).parent.parent))
 from core.config import settings
 from database.docx_loader import DocxLoader
 from database.embeddings import Embeddings
-from database.faiss_loader import FAISSLoader
+from database.chroma_loader import ChromaLoader  # ✅ استبدال FAISSLoader بـ ChromaLoader
 from utils.logger import logger
 
 
 async def build_index():
-    logger.info("🔨 Starting index build...")
+    logger.info("🔨 Starting index build with Chroma...")
 
     kb_path = settings.KNOWLEDGE_BASE_PATH
     if not kb_path.exists():
@@ -36,7 +36,7 @@ async def build_index():
                 # استخدام load_file بدلاً من load
                 result = loader.load_file(str(file_path))
                 if result:
-                    # load_file بترجع قاموس واحد، نحوله إلى قائمة لتوحيد المعالجة
+                    # load_file بترجع قاموس واحد
                     chunk = {
                         "text": result.get("text", ""),
                         "metadata": result.get("metadata", {})
@@ -67,27 +67,39 @@ async def build_index():
 
     logger.info(f"🧬 Generated {len(vectors)} embeddings")
 
-    # بناء الفهرس
-    faiss_loader = FAISSLoader()
-    faiss_loader.clear()
+    # ✅ بناء فهرس Chroma
+    chroma_loader = ChromaLoader()
+    chroma_loader.clear()  # مسح المجموعة القديمة
 
+    # تجهيز المستندات للإضافة
+    documents_to_add = []
     for i, (chunk, vector) in enumerate(zip(all_chunks, vectors)):
         doc_id = f"doc_{i}_{chunk['metadata'].get('filename', 'unknown')}"
-        faiss_loader.add_document(
-            doc_id=doc_id,
-            text=chunk.get("text", ""),
-            embedding=vector,
-            metadata=chunk.get("metadata", {})
-        )
+        
+        # تحويل المتجه إلى قائمة (إذا كان numpy array)
+        if hasattr(vector, 'tolist'):
+            vector = vector.tolist()
+        elif hasattr(vector, 'numpy'):
+            vector = vector.numpy().tolist()
+        elif isinstance(vector, np.ndarray):
+            vector = vector.tolist()
+        
+        documents_to_add.append({
+            "id": doc_id,
+            "text": chunk.get("text", ""),
+            "embedding": vector,
+            "metadata": chunk.get("metadata", {})
+        })
 
-    # حفظ الفهرس
-    success = faiss_loader.save()
-    if success:
-        logger.info(f"✅ Index built and saved! ({len(all_chunks)} documents)")
+    # إضافة جميع المستندات دفعة واحدة
+    added_count = chroma_loader.add_documents(documents_to_add)
+    
+    if added_count > 0:
+        logger.info(f"✅ Index built and saved! ({added_count} documents in Chroma)")
+        return True
     else:
         logger.error("❌ Failed to save index!")
-
-    return success
+        return False
 
 
 if __name__ == "__main__":
