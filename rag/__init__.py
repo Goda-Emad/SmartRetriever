@@ -6,7 +6,6 @@
 """
 
 from .retriever import Retriever
-from .semantic_search import SemanticSearch
 from .qa_engine import QAEngine
 from .reranker import Reranker
 from .chunking import Chunking
