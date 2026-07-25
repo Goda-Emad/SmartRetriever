@@ -7,7 +7,7 @@ from pathlib import Path
 TRANSLATIONS = {
     "ar": {
         "home": "الصفحة الرئيسية",
-        "about": "👥 عن الفريق",
+        "about": "عن الفريق",
         "chat": "المساعد الذكي",
         "docs": "المستندات",
         "analytics": "التحليلات",
@@ -40,7 +40,7 @@ TRANSLATIONS = {
     },
     "en": {
         "home": "Home",
-        "about": "👥 About Team",
+        "about": "About Team",
         "chat": "AI Assistant",
         "docs": "Documents",
         "analytics": "Analytics",
@@ -289,10 +289,10 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
         # 🔀 التنقل الفوري بين الصفحات
         if show_navigation:
             st.page_link("app.py", label=T["home"], icon="🏠")
-            st.page_link("pages/0_About.py", label=T["about"], icon="👥")
             st.page_link("pages/1_Chat.py", label=T["chat"], icon="💬")
             st.page_link("pages/2_Documents.py", label=T["docs"], icon="📁")
             st.page_link("pages/3_Analytics.py", label=T["analytics"], icon="📊")
+            st.page_link("pages/0_About.py", label=T["about"], icon="👥")
             st.markdown("---")
 
         # 📊 عرض الإحصائيات (إن وجدت)
