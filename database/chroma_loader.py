@@ -24,7 +24,8 @@ def clean_metadata_for_chroma(metadata: Dict[str, Any]) -> Dict[str, Any]:
     تنظيف البيانات الوصفية لتكون متوافقة مع Chroma
     
     Chroma يقبل فقط:
-    - str, int, float, bool, None
+    - str, int, float, bool
+    - لا يقبل: None, list, dict, set, tuple
     
     Args:
         metadata: البيانات الوصفية
@@ -35,35 +36,80 @@ def clean_metadata_for_chroma(metadata: Dict[str, Any]) -> Dict[str, Any]:
     cleaned = {}
     
     for key, value in metadata.items():
-        # تخطط القيم غير الصالحة
+        # تخطي المفاتيح الفارغة
+        if not key:
+            continue
+        
+        # ============================================================
+        # 1. معالجة القيم الفارغة (None)
+        # ============================================================
         if value is None:
-            cleaned[key] = None
-        elif isinstance(value, (str, int, float, bool)):
+            cleaned[key] = "unknown"
+            continue
+        
+        # ============================================================
+        # 2. معالجة الأنواع الأساسية المدعومة
+        # ============================================================
+        if isinstance(value, (str, int, float, bool)):
             cleaned[key] = value
-        elif isinstance(value, (list, tuple, set)):
-            # تحويل إلى قائمة من السلاسل
+            continue
+        
+        # ============================================================
+        # 3. معالجة القوائم والمجموعات
+        # ============================================================
+        if isinstance(value, (list, tuple, set)):
+            # تحويل إلى نص مفصول بفواصل
             try:
-                cleaned[key] = str(list(value))
+                str_values = [str(v) for v in value if v is not None]
+                if str_values:
+                    cleaned[key] = ", ".join(str_values)
+                else:
+                    cleaned[key] = "empty_list"
             except:
                 cleaned[key] = str(value)
-        elif isinstance(value, dict):
-            # تحويل القاموس إلى سلسلة
+            continue
+        
+        # ============================================================
+        # 4. معالجة القواميس (dict)
+        # ============================================================
+        if isinstance(value, dict):
+            # تحويل القاموس إلى نص key=value, key2=value2
             try:
-                cleaned[key] = str(value)
+                items = []
+                for k, v in value.items():
+                    if v is not None:
+                        items.append(f"{k}={v}")
+                if items:
+                    cleaned[key] = "; ".join(items)
+                else:
+                    cleaned[key] = "empty_dict"
             except:
                 cleaned[key] = str(value)
-        elif isinstance(value, np.ndarray):
-            # تحويل numpy array إلى قائمة
+            continue
+        
+        # ============================================================
+        # 5. معالجة numpy arrays
+        # ============================================================
+        if isinstance(value, np.ndarray):
             try:
-                cleaned[key] = value.tolist()
+                # تحويل إلى قائمة ثم إلى نص
+                arr_list = value.tolist()
+                if arr_list:
+                    str_values = [str(v) for v in arr_list if v is not None]
+                    cleaned[key] = ", ".join(str_values) if str_values else "empty_array"
+                else:
+                    cleaned[key] = "empty_array"
             except:
                 cleaned[key] = str(value)
-        else:
-            # أي نوع آخر يتم تحويله إلى سلسلة
-            try:
-                cleaned[key] = str(value)
-            except:
-                cleaned[key] = None
+            continue
+        
+        # ============================================================
+        # 6. أي نوع آخر - تحويل إلى نص
+        # ============================================================
+        try:
+            cleaned[key] = str(value)
+        except:
+            cleaned[key] = "unknown_type"
     
     return cleaned
 
