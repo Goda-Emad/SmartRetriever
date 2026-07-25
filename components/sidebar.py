@@ -1,10 +1,10 @@
 import streamlit as st
-from typing import Dict, Any, Optional
+from pathlib import Path
 
 # ============================================================
 # 🌐 قاموس اللغات (Translations Dictionary)
 # ============================================================
-TRANSLATIONS: Dict[str, Dict[str, str]] = {
+TRANSLATIONS = {
     "ar": {
         "home": "الصفحة الرئيسية",
         "about": "👥 عن الفريق",
@@ -19,7 +19,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "docs_count": "المستندات",
         "suppliers_count": "الموردين",
         "contracts_count": "العقود",
-        "quality_rate": "الجودة",
+        "quality_rate": "الجودة"
     },
     "en": {
         "home": "Home",
@@ -35,116 +35,123 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "docs_count": "Documents",
         "suppliers_count": "Suppliers",
         "contracts_count": "Contracts",
-        "quality_rate": "Quality",
+        "quality_rate": "Quality"
     }
 }
-
 
 # ============================================================
 # 🎨 تطبيق التنسيق الديناميكي للثيم (Dynamic Theme Injector)
 # ============================================================
-def apply_dynamic_theme() -> None:
-    """تطبيق الثيم (فاتح/داكن) واتجاه النص عبر متغيرات CSS موحدة."""
-    is_dark = st.session_state.get("dark_mode", True)
-    is_rtl = st.session_state.get("lang", "ar") == "ar"
+def apply_dynamic_theme():
+    """تطبيق الثيم (فاتح/داكن) مع ضبط تباين الألوان لكافة العناصر والبطاقات"""
+    if st.session_state.get("dark_mode", True):
+        # 🌙 الوضع الداكن (Dark Mode)
+        st.markdown("""
+        <style>
+            /* خلفية التطبيق والسايدبار */
+            .stApp { background-color: #0B0F19 !important; color: #F8FAFC !important; }
+            [data-testid="stSidebar"] { background-color: #111827 !important; border-right: 1px solid rgba(255, 255, 255, 0.08) !important; }
+            [data-testid="stSidebar"] * { color: #CBD5E1 !important; }
+            
+            /* الهيدر والبانر الرئيسي */
+            .doc-header, .chat-header, .hero-banner {
+                background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%) !important;
+                border: 1px solid rgba(99, 102, 241, 0.3) !important;
+                color: #FFFFFF !important;
+            }
+            .doc-header h2, .doc-header p, .chat-header h2, .chat-header p, .hero-banner h1, .hero-banner p { 
+                color: #FFFFFF !important; 
+            }
 
-    # تحديد اتجاه الصفحة والمتغيرات اللونية
-    direction = "rtl" if is_rtl else "ltr"
-    
-    if is_dark:
-        bg_app = "#0B0F19"
-        text_main = "#F8FAFC"
-        bg_sidebar = "#111827"
-        text_sidebar = "#CBD5E1"
-        header_bg = "linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)"
-        header_border = "rgba(99, 102, 241, 0.3)"
-        card_bg = "#1E293B"
-        card_border = "rgba(255, 255, 255, 0.08)"
-        input_bg = "#182232"
-        input_text = "#FFFFFF"
-        accent_color = "#38BDF8"
+            /* بطاقات الإحصائيات والكروت */
+            .metric-card, .doc-card, div[data-testid="stMetric"] {
+                background-color: #1E293B !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+            }
+            div[data-testid="stMetricValue"] { color: #38BDF8 !important; }
+            div[data-testid="stMetricLabel"] { color: #94A3B8 !important; }
+
+            /* المدخلات والقوائم المنسدلة */
+            .stTextInput input, div[data-baseweb="select"] > div {
+                background-color: #182232 !important;
+                color: #FFFFFF !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            
+            /* الأزرار العامة */
+            .stButton > button {
+                background-color: #1E293B !important;
+                color: #F8FAFC !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            }
+            .stButton > button:hover {
+                border-color: #38BDF8 !important;
+                color: #38BDF8 !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
     else:
-        bg_app = "#F8FAFC"
-        text_main = "#0F172A"
-        bg_sidebar = "#FFFFFF"
-        text_sidebar = "#334155"
-        header_bg = "linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)"
-        header_border = "#C7D2FE"
-        card_bg = "#FFFFFF"
-        card_border = "#E2E8F0"
-        input_bg = "#FFFFFF"
-        input_text = "#0F172A"
-        accent_color = "#0284C7"
+        # ☀️ الوضع الفاتح (Light Mode - إبراز كافة النصوص والبطاقات)
+        st.markdown("""
+        <style>
+            /* خلفية التطبيق والسايدبار */
+            .stApp { background-color: #F8FAFC !important; color: #0F172A !important; }
+            [data-testid="stSidebar"] { background-color: #FFFFFF !important; border-right: 1px solid #E2E8F0 !important; }
+            [data-testid="stSidebar"] * { color: #334155 !important; }
 
-    css_code = f"""
-    <style>
-        /* 🌐 ضبط الاتجاه الأساسي للتطبيق */
-        .stApp {{
-            direction: {direction};
-            background-color: {bg_app} !important;
-            color: {text_main} !important;
-        }}
+            /* الهيدر والبانر الرئيسي */
+            .doc-header, .chat-header, .hero-banner {
+                background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%) !important;
+                border: 1px solid #C7D2FE !important;
+                color: #1E1B4B !important;
+            }
+            .doc-header h2, .chat-header h2, .hero-banner h1 { color: #1E1B4B !important; }
+            .doc-header p, .chat-header p, .hero-banner p { color: #3730A3 !important; }
 
-        /* 📱 السايدبار */
-        [data-testid="stSidebar"] {{
-            background-color: {bg_sidebar} !important;
-            border-inline-end: 1px solid {card_border} !important;
-        }}
-        [data-testid="stSidebar"] * {{
-            color: {text_sidebar} !important;
-        }}
+            /* بطاقات الإحصائيات والكروت */
+            .metric-card, .doc-card, div[data-testid="stMetric"] {
+                background-color: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03) !important;
+                border-radius: 12px !important;
+                padding: 12px !important;
+            }
+            div[data-testid="stMetricValue"] { color: #0284C7 !important; }
+            div[data-testid="stMetricLabel"] { color: #64748B !important; }
 
-        /* 🏛️ الهيدر والبانر الرئيسي */
-        .doc-header, .chat-header, .hero-banner {{
-            background: {header_bg} !important;
-            border: 1px solid {header_border} !important;
-            border-radius: 12px;
-            padding: 1rem;
-        }}
+            /* المدخلات والقوائم المنسدلة */
+            .stTextInput input, div[data-baseweb="select"] > div {
+                background-color: #FFFFFF !important;
+                color: #0F172A !important;
+                border-color: #CBD5E1 !important;
+            }
 
-        /* 📊 البطاقات والمقاييس */
-        .metric-card, .doc-card, div[data-testid="stMetric"] {{
-            background-color: {card_bg} !important;
-            border: 1px solid {card_border} !important;
-            border-radius: 12px !important;
-            padding: 12px !important;
-        }}
-        div[data-testid="stMetricValue"] {{ color: {accent_color} !important; }}
+            /* الأزرار العامة */
+            .stButton > button {
+                background-color: #FFFFFF !important;
+                color: #1E293B !important;
+                border: 1px solid #CBD5E1 !important;
+            }
+            .stButton > button:hover {
+                background-color: #F1F5F9 !important;
+                border-color: #0284C7 !important;
+                color: #0284C7 !important;
+            }
 
-        /* ✏️ مدخلات النصوص والقوائم */
-        .stTextInput input, div[data-baseweb="select"] > div {{
-            background-color: {input_bg} !important;
-            color: {input_text} !important;
-            border-color: {card_border} !important;
-        }}
-
-        /* 🔘 الأزرار العامة */
-        .stButton > button {{
-            background-color: {card_bg} !important;
-            color: {text_main} !important;
-            border: 1px solid {card_border} !important;
-            border-radius: 8px;
-            transition: all 0.2s ease-in-out;
-        }}
-        .stButton > button:hover {{
-            border-color: {accent_color} !important;
-            color: {accent_color} !important;
-        }}
-    </style>
-    """
-    st.markdown(css_code, unsafe_allow_html=True)
-
+            /* العناوين والنصوص الإضافية */
+            h1, h2, h3, h4, h5, h6, p, span, label, div {
+                color: #0F172A;
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
 # ============================================================
 # 🖥️ المكون الرئيسي للسايدبار (Render Sidebar)
 # ============================================================
-def render_sidebar(
-    stats: Optional[Dict[str, Any]] = None,
-    show_theme_toggle: bool = True,
-    show_stats: bool = True,
-    show_navigation: bool = True,
-) -> str:
-    """عرض القائمة الجانبية الموحدة للتطبيق وترجيع رمز اللغة الحالية."""
+def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_navigation=True):
+    """عرض القائمة الجانبية الموحدة للتطبيق"""
     
     # 1. تهيئة حالة الجلسة للثيم واللغة
     if "dark_mode" not in st.session_state:
@@ -152,7 +159,7 @@ def render_sidebar(
     if "lang" not in st.session_state:
         st.session_state.lang = "ar"
 
-    # 2. تطبيق الثيم والاتجاه الديناميكي
+    # 2. تطبيق الثيم الديناميكي حسب الاختيار الحالي
     apply_dynamic_theme()
     
     # 3. جلب النصوص المترجمة
@@ -161,22 +168,19 @@ def render_sidebar(
 
     with st.sidebar:
         # 🏷️ الهوية واللوجو
-        st.markdown(
-            f"""
-            <div style="text-align: center; padding: 10px 0 15px 0;">
-                <h2 style="margin: 0; font-weight: 800; font-size: 1.4rem;">🧠 SmartRetriever</h2>
-                <span style="font-size: 0.75rem; opacity: 0.8;">{T['brand_subtitle']}</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"""
+        <div style="text-align: center; padding: 10px 0 15px 0;">
+            <h2 style="margin: 0; font-weight: 800; font-size: 1.4rem;">🧠 SmartRetriever</h2>
+            <span style="font-size: 0.75rem; color: #94A3B8;">{T['brand_subtitle']}</span>
+        </div>
+        """, unsafe_allow_html=True)
 
         st.markdown("---")
 
         # 🔀 التنقل الفوري بين الصفحات
         if show_navigation:
             st.page_link("app.py", label=T["home"], icon="🏠")
-            st.page_link("pages/0_About.py", label=T["about"], icon="👥")
+            st.page_link("pages/0_About.py", label=T["about"], icon="👥")  # ✅ إضافة صفحة عن الفريق
             st.page_link("pages/1_Chat.py", label=T["chat"], icon="💬")
             st.page_link("pages/2_Documents.py", label=T["docs"], icon="📁")
             st.page_link("pages/3_Analytics.py", label=T["analytics"], icon="📊")
@@ -196,37 +200,24 @@ def render_sidebar(
 
         with col_theme:
             if show_theme_toggle:
-                theme_btn_label = (
-                    T["theme_light"]
-                    if st.session_state.dark_mode
-                    else T["theme_dark"]
-                )
-                if st.button(
-                    theme_btn_label, key="toggle_theme_btn", use_container_width=True
-                ):
+                theme_btn_label = T["theme_light"] if st.session_state.dark_mode else T["theme_dark"]
+                if st.button(theme_btn_label, key="toggle_theme_btn", use_container_width=True):
                     st.session_state.dark_mode = not st.session_state.dark_mode
                     st.rerun()
 
         with col_lang:
-            if st.button(
-                T["lang_btn"], key="toggle_lang_btn", use_container_width=True
-            ):
-                st.session_state.lang = (
-                    "en" if st.session_state.lang == "ar" else "ar"
-                )
+            if st.button(T["lang_btn"], key="toggle_lang_btn", use_container_width=True):
+                st.session_state.lang = "en" if st.session_state.lang == "ar" else "ar"
                 st.rerun()
 
         # 🔗 روابط التواصل والتحقوق السفليّة
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(
-            """
-            <div style="font-size: 0.75rem; text-align: center; opacity: 0.7;">
-                📦 AutoData · 2024-2026<br>
-                <a href="https://github.com" target="_blank" style="color: inherit; text-decoration: underline;">GitHub</a> | 
-                <a href="https://linkedin.com" target="_blank" style="color: inherit; text-decoration: underline;">LinkedIn</a>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("""
+        <div style="font-size: 0.75rem; text-align: center; opacity: 0.7;">
+            📦 AutoData · 2024-2026<br>
+            <a href="https://github.com" target="_blank" style="color: #38BDF8; text-decoration: none;">GitHub</a> | 
+            <a href="https://linkedin.com" target="_blank" style="color: #38BDF8; text-decoration: none;">LinkedIn</a>
+        </div>
+        """, unsafe_allow_html=True)
 
     return st.session_state.lang
