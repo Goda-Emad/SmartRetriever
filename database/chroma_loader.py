@@ -9,9 +9,63 @@ from chromadb.utils import embedding_functions
 from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 import uuid
+import numpy as np
 
 from core.config import settings
 from utils.logger import logger
+
+
+# ============================================================
+# ✅ دالة تنظيف البيانات الوصفية
+# ============================================================
+
+def clean_metadata_for_chroma(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    تنظيف البيانات الوصفية لتكون متوافقة مع Chroma
+    
+    Chroma يقبل فقط:
+    - str, int, float, bool, None
+    
+    Args:
+        metadata: البيانات الوصفية
+        
+    Returns:
+        البيانات الوصفية النظيفة
+    """
+    cleaned = {}
+    
+    for key, value in metadata.items():
+        # تخطط القيم غير الصالحة
+        if value is None:
+            cleaned[key] = None
+        elif isinstance(value, (str, int, float, bool)):
+            cleaned[key] = value
+        elif isinstance(value, (list, tuple, set)):
+            # تحويل إلى قائمة من السلاسل
+            try:
+                cleaned[key] = str(list(value))
+            except:
+                cleaned[key] = str(value)
+        elif isinstance(value, dict):
+            # تحويل القاموس إلى سلسلة
+            try:
+                cleaned[key] = str(value)
+            except:
+                cleaned[key] = str(value)
+        elif isinstance(value, np.ndarray):
+            # تحويل numpy array إلى قائمة
+            try:
+                cleaned[key] = value.tolist()
+            except:
+                cleaned[key] = str(value)
+        else:
+            # أي نوع آخر يتم تحويله إلى سلسلة
+            try:
+                cleaned[key] = str(value)
+            except:
+                cleaned[key] = None
+    
+    return cleaned
 
 
 class ChromaLoader:
@@ -105,6 +159,16 @@ class ChromaLoader:
         import time
         start_time = time.time()
         
+        # ✅ التأكد من صيغة المتجه
+        if isinstance(query_vector, np.ndarray):
+            query_vector = query_vector.tolist()
+        elif not isinstance(query_vector, list):
+            query_vector = list(query_vector)
+        
+        # التأكد من أن المتجه هو قائمة مسطحة
+        if query_vector and isinstance(query_vector[0], (list, np.ndarray)):
+            query_vector = query_vector[0]
+        
         # بناء شرط التصفية
         where_filter = {}
         if filter_category:
@@ -113,10 +177,15 @@ class ChromaLoader:
             where_filter["supplier"] = filter_supplier
         
         try:
+            # ✅ التحقق من وجود مستندات
+            if self.collection.count() == 0:
+                logger.warning("⚠️ Collection is empty")
+                return []
+            
             # البحث في Chroma
             results = self.collection.query(
                 query_embeddings=[query_vector],
-                n_results=min(top_k, self.collection.count() or 1),
+                n_results=min(top_k, self.collection.count()),
                 where=where_filter if where_filter else None,
                 include=["documents", "metadatas", "distances"]
             )
@@ -133,7 +202,7 @@ class ChromaLoader:
                 for i, doc_id in enumerate(ids):
                     # حساب درجة التشابه من المسافة
                     distance = distances[i] if i < len(distances) else 1.0
-                    similarity = 1 / (1 + distance)  # تحويل المسافة إلى تشابه
+                    similarity = 1 / (1 + distance)
                     
                     # تصفية حسب الحد الأدنى للدرجة
                     if similarity < min_score:
@@ -184,11 +253,20 @@ class ChromaLoader:
             نجاح العملية
         """
         try:
+            # ✅ تنظيف البيانات الوصفية
+            clean_meta = clean_metadata_for_chroma(metadata)
+            
+            # ✅ التأكد من صيغة المتجه
+            if isinstance(embedding, np.ndarray):
+                embedding = embedding.tolist()
+            elif not isinstance(embedding, list):
+                embedding = list(embedding)
+            
             self.collection.add(
                 ids=[doc_id],
                 embeddings=[embedding],
                 documents=[text],
-                metadatas=[metadata]
+                metadatas=[clean_meta]
             )
             
             self.stats["total_documents"] = self.collection.count()
@@ -222,10 +300,25 @@ class ChromaLoader:
             metadatas = []
             
             for doc in documents:
+                # ✅ تنظيف البيانات الوصفية
+                clean_meta = clean_metadata_for_chroma(doc.get("metadata", {}))
+                
+                # ✅ التأكد من صيغة المتجه
+                embedding = doc.get("embedding", [])
+                if isinstance(embedding, np.ndarray):
+                    embedding = embedding.tolist()
+                elif not isinstance(embedding, list):
+                    embedding = list(embedding)
+                
                 ids.append(doc.get("id", str(uuid.uuid4())))
                 texts.append(doc.get("text", ""))
-                embeddings.append(doc.get("embedding", []))
-                metadatas.append(doc.get("metadata", {}))
+                embeddings.append(embedding)
+                metadatas.append(clean_meta)
+            
+            # ✅ التأكد من أن جميع القوائم بنفس الطول
+            if not (len(ids) == len(texts) == len(embeddings) == len(metadatas)):
+                logger.error("❌ Mismatched lengths in documents")
+                return 0
             
             self.collection.add(
                 ids=ids,
@@ -303,7 +396,8 @@ class ChromaLoader:
             self.client.delete_collection(self.collection_name)
             self.collection = self.client.create_collection(
                 name=self.collection_name,
-                embedding_function=self.embedding_fn
+                embedding_function=self.embedding_fn,
+                metadata={"hnsw:space": "cosine"}
             )
             self.stats["total_documents"] = 0
             logger.info("🗑️ Collection cleared")
@@ -379,7 +473,11 @@ class ChromaLoader:
         Returns:
             عدد المستندات
         """
-        return self.collection.count()
+        try:
+            return self.collection.count()
+        except Exception as e:
+            logger.error(f"❌ Error getting index size: {str(e)}")
+            return 0
 
     def get_index_info(self) -> Dict[str, Any]:
         """
@@ -407,7 +505,6 @@ class ChromaLoader:
             نجاح العملية
         """
         try:
-            # Chroma يحفظ تلقائياً مع PersistentClient
             logger.info("✅ Chroma data saved (automatic)")
             return True
         except Exception as e:
