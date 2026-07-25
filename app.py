@@ -43,7 +43,8 @@ HOME_TRANSLATIONS = {
         "feat_2": "⚡ معالجة فائقة السرعة مع Groq API",
         "feat_3": "🔒 حماية وأمان كامل للبيانات",
         "feat_4": "🌙 دعم كلي للوضع الليلي والنهار",
-        "sys_info_title": "⚙️ معلومات وبيئة التشغيل"
+        "sys_info_title": "⚙️ معلومات وبيئة التشغيل",
+        "about_team": "👥 عن الفريق"
     },
     "en": {
         "badge": "⚡ AI RETRIEVAL SYSTEM V2.5",
@@ -63,7 +64,8 @@ HOME_TRANSLATIONS = {
         "feat_2": "⚡ Ultra-fast processing via Groq API",
         "feat_3": "🔒 End-to-end Data Privacy & Security",
         "feat_4": "🌙 Full Light & Dark Theme Support",
-        "sys_info_title": "⚙️ System & Environment Info"
+        "sys_info_title": "⚙️ System & Environment Info",
+        "about_team": "👥 About the Team"
     }
 }
 
@@ -246,8 +248,13 @@ def show_home():
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button(T['btn_start_chat'], use_container_width=True, type="primary"):
-            st.switch_page("pages/1_Chat.py")
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button(T['btn_start_chat'], use_container_width=True, type="primary"):
+                st.switch_page("pages/1_Chat.py")
+        with col_btn2:
+            if st.button("👥 " + T.get('about_team', 'عن الفريق'), use_container_width=True):
+                st.switch_page("pages/0_About.py")
 
     with col_side:
         st.markdown(f"### {T['features_title']}")
@@ -262,7 +269,7 @@ def show_home():
     with st.expander(T['sys_info_title'], expanded=False):
         ec1, ec2 = st.columns(2)
         with ec1:
-            st.code(f"Chroma Path: {settings.CHROMA_PATH}", language="text")  # ✅ تغيير إلى Chroma
+            st.code(f"Chroma Path: {settings.CHROMA_PATH}", language="text")
             st.code(f"Docs Path: {settings.KNOWLEDGE_BASE_PATH}", language="text")
         with ec2:
             st.code(f"LLM Model: {settings.GROQ_MODEL}", language="text")
