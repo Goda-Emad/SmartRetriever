@@ -40,40 +40,132 @@ def load_css():
             display: none !important;
         }
 
+        /* 🎨 Barbie Colors */
+        :root {
+            --bg-primary: #FCE4EC;
+            --bg-secondary: #FFFFFF;
+            --primary: #E0218A;
+            --primary-dark: #C2185B;
+            --text-primary: #4A0E2E;
+            --text-secondary: #C2185B;
+            --shadow: rgba(224, 33, 138, 0.2);
+        }
+
+        /* خلفية التطبيق */
+        .stApp {
+            background-color: #FCE4EC !important;
+        }
+
         /* تحسين صندوق المحادثة */
         .stChatMessage {
             border-radius: 12px !important;
             padding: 1rem !important;
             margin-bottom: 0.8rem !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border: 2px solid #E0218A !important;
+            background-color: #FFFFFF !important;
+        }
+        .stChatMessage.user {
+            background-color: #FCE4EC !important;
+            border-color: #C2185B !important;
+        }
+        .stChatMessage.assistant {
+            background-color: #FFFFFF !important;
+            border-color: #E0218A !important;
         }
 
         /* هيدر الصفحة */
         .chat-header {
-            background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            background: linear-gradient(135deg, #FCE4EC 0%, #E0218A 100%) !important;
+            border: 2px solid #C2185B !important;
             border-radius: 14px;
             padding: 1.2rem 1.5rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(224, 33, 138, 0.2);
+        }
+        .chat-header h2 {
+            color: #FFFFFF !important;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+        }
+        .chat-header p {
+            color: #FFFFFF !important;
+            font-size: 0.88rem;
+            margin: 0;
         }
         
         /* أزرار الأسئلة المقترحة */
         div[data-testid="stColumn"] div.stButton > button {
-            background: #182232 !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: #CBD5E1 !important;
+            background: #FFFFFF !important;
+            border: 2px solid #E0218A !important;
+            color: #4A0E2E !important;
             border-radius: 10px !important;
             padding: 0.6rem 0.8rem !important;
             font-size: 0.88rem !important;
             text-align: right !important;
-            transition: all 0.2s ease !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 10px rgba(224, 33, 138, 0.1);
         }
         
         div[data-testid="stColumn"] div.stButton > button:hover {
-            border-color: #38BDF8 !important;
-            color: #38BDF8 !important;
-            background: #1E293B !important;
+            border-color: #C2185B !important;
+            color: #E0218A !important;
+            background: #FCE4EC !important;
             transform: translateY(-2px) !important;
+            box-shadow: 0 4px 20px rgba(224, 33, 138, 0.25);
+        }
+
+        /* أزرار التحكم (مسح، تحديث) */
+        .stButton > button {
+            background: linear-gradient(135deg, #E0218A 0%, #C2185B 100%) !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(224, 33, 138, 0.3);
+            transition: all 0.3s ease !important;
+        }
+        .stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(224, 33, 138, 0.4);
+        }
+
+        /* مدخل النص */
+        .stChatInput textarea {
+            border: 2px solid #E0218A !important;
+            border-radius: 12px !important;
+            background-color: #FFFFFF !important;
+            color: #4A0E2E !important;
+            box-shadow: 0 2px 10px rgba(224, 33, 138, 0.1) !important;
+        }
+        .stChatInput textarea:focus {
+            border-color: #C2185B !important;
+            box-shadow: 0 0 0 3px rgba(224, 33, 138, 0.2) !important;
+        }
+
+        /* تنسيق النصوص في المحادثة */
+        .stChatMessage p, .stChatMessage div, .stChatMessage span {
+            color: #4A0E2E !important;
+        }
+
+        /* علامات التبويب */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background-color: #FFFFFF !important;
+            border: 2px solid #E0218A !important;
+            border-radius: 8px !important;
+            padding: 8px 16px !important;
+            color: #4A0E2E !important;
+        }
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            background: linear-gradient(135deg, #E0218A 0%, #C2185B 100%) !important;
+            color: #FFFFFF !important;
+        }
+
+        /* سبينر */
+        .stSpinner > div {
+            border-color: #E0218A !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -116,6 +208,7 @@ def handle_routing(selected_page: str):
     """ربط التنقل بين الصفحات"""
     page_routes = {
         "HOME": "app.py",
+        "عن الفريق": "pages/0_About.py",
         "المستندات": "pages/2_Documents.py",
         "التحليلات": "pages/3_Analytics.py",
     }
@@ -244,7 +337,7 @@ def show():
     if selected_page != "المساعد الذكي":
         handle_routing(selected_page)
 
-    # ✅ 2. الهيدر والتحكم العشرين
+    # ✅ 2. الهيدر والتحكم
     col_title, col_actions = st.columns([3, 1.5])
     
     with col_title:
@@ -253,7 +346,7 @@ def show():
             <h2 style="color: #FFFFFF; font-weight: 800; margin: 0 0 6px 0;">
                 💬 المساعد الذكي (SmartRetriever)
             </h2>
-            <p style="color: #94A3B8; font-size: 0.88rem; margin: 0;">
+            <p style="color: #FFFFFF; font-size: 0.88rem; margin: 0;">
                 طرح الأسئلة والبحث التفاعلي في العقود، السياسات، والمستندات المخزنة.
             </p>
         </div>
@@ -276,7 +369,7 @@ def show():
     # ✅ 3. عرض سجل الرسائل
     display_messages()
 
-    # ✅ 4. معالجة الأسلئة المجهزة أو المدخلة من مربع النص
+    # ✅ 4. معالجة الأسئلة المجهزة أو المدخلة من مربع النص
     query_to_process = None
 
     # إذا كان هناك سؤال معلق من الأزرار المقترحة
