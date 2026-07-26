@@ -43,7 +43,8 @@ HOME_TRANSLATIONS = {
         "feat_2": "⚡ معالجة فائقة السرعة مع Groq API",
         "feat_3": "🔒 حماية وأمان كامل للبيانات",
         "feat_4": "🌙 دعم كلي للوضع الليلي والنهار",
-        "sys_info_title": "⚙️ معلومات وبيئة التشغيل"
+        "sys_info_title": "⚙️ معلومات وبيئة التشغيل",
+        "about_team": "👥 عن الفريق"
     },
     "en": {
         "badge": "⚡ AI RETRIEVAL SYSTEM V2.5",
@@ -63,7 +64,8 @@ HOME_TRANSLATIONS = {
         "feat_2": "⚡ Ultra-fast processing via Groq API",
         "feat_3": "🔒 End-to-end Data Privacy & Security",
         "feat_4": "🌙 Full Light & Dark Theme Support",
-        "sys_info_title": "⚙️ System & Environment Info"
+        "sys_info_title": "⚙️ System & Environment Info",
+        "about_team": "👥 About the Team"
     }
 }
 
@@ -79,29 +81,123 @@ def load_css():
             display: none !important;
         }
         
-        /* بطاقات الإحصائيات */
+        /* 🎨 Barbie Color Palette */
+        :root {
+            --bg-primary: #FCE4EC;
+            --bg-secondary: #FFFFFF;
+            --primary: #E0218A;
+            --primary-dark: #C2185B;
+            --text-primary: #4A0E2E;
+            --text-secondary: #C2185B;
+            --shadow: rgba(194, 24, 91, 0.2);
+        }
+        
+        /* ✅ خلفية التطبيق */
+        .stApp {
+            background-color: #FCE4EC !important;
+        }
+        
+        /* ✅ خلفية السايدبار */
+        [data-testid="stSidebar"] {
+            background-color: #FFFFFF !important;
+            border-right: 1px solid #C2185B !important;
+        }
+        
+        /* ✅ جميع النصوص */
+        h1, h2, h3, h4, h5, h6, p, span, label, div {
+            color: #4A0E2E !important;
+        }
+        
+        /* ✅ بطاقات الإحصائيات */
         .metric-card {
+            background: #FFFFFF !important;
+            border: 2px solid #E0218A !important;
             border-radius: 14px;
             padding: 1.2rem;
             text-align: center;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(224, 33, 138, 0.15);
+        }
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(224, 33, 138, 0.25);
         }
         .metric-value {
             font-size: 1.8rem;
             font-weight: 800;
-            color: #38BDF8;
+            color: #E0218A !important;
             margin-top: 0.2rem;
         }
         .metric-label {
             font-size: 0.85rem;
             font-weight: 600;
+            color: #4A0E2E !important;
         }
         
-        /* Hero Section */
+        /* ✅ Hero Section */
         .hero-banner {
+            background: linear-gradient(135deg, #FCE4EC 0%, #E0218A 100%) !important;
             border-radius: 16px;
             padding: 2rem;
             margin-bottom: 1.5rem;
+            border: 2px solid #C2185B;
+            box-shadow: 0 4px 20px rgba(224, 33, 138, 0.2);
+        }
+        .hero-banner h1 {
+            color: #FFFFFF !important;
+        }
+        .hero-banner p {
+            color: #FFFFFF !important;
+        }
+        
+        /* ✅ الأزرار */
+        .stButton > button {
+            background: linear-gradient(135deg, #E0218A 0%, #C2185B 100%) !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(224, 33, 138, 0.3);
+        }
+        .stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(224, 33, 138, 0.4);
+        }
+        
+        /* ✅ المدخلات */
+        .stTextInput input, div[data-baseweb="select"] > div {
+            background-color: #FFFFFF !important;
+            color: #4A0E2E !important;
+            border: 2px solid #E0218A !important;
+            border-radius: 10px !important;
+        }
+        .stTextInput input:focus, div[data-baseweb="select"] > div:focus {
+            border-color: #C2185B !important;
+            box-shadow: 0 0 0 3px rgba(224, 33, 138, 0.2);
+        }
+        
+        /* ✅ البطاقات */
+        .stExpander, div[data-testid="stMetric"] {
+            background: #FFFFFF !important;
+            border: 2px solid #E0218A !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(224, 33, 138, 0.1);
+        }
+        
+        /* ✅ العناصر الجانبية */
+        [data-testid="stSidebar"] * {
+            color: #4A0E2E !important;
+        }
+        
+        /* ✅ روابط */
+        a {
+            color: #E0218A !important;
+            text-decoration: none !important;
+        }
+        a:hover {
+            color: #C2185B !important;
+            text-decoration: underline !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -122,7 +218,7 @@ def init_session_state():
     if "session_id" not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())
     if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = True
+        st.session_state.dark_mode = False  # ✅ وضع فاتح افتراضياً مع Barbie Colors
     if "lang" not in st.session_state:
         st.session_state.lang = "ar"
     if "stats" not in st.session_state:
@@ -172,7 +268,7 @@ def show_home():
     # ✅ عرض السايدبار الموحد
     current_lang = render_sidebar(
         stats=st.session_state.stats,
-        show_theme_toggle=True,
+        show_theme_toggle=False,  # ✅ إخفاء زر الثيم لأن الألوان ثابتة
         show_stats=False,
         show_navigation=True
     )
@@ -184,14 +280,14 @@ def show_home():
     st.markdown(f"""
     <div class="hero-banner">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-            <span style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">
+            <span style="background: rgba(255, 255, 255, 0.25); color: #FFFFFF; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.3);">
                 {T['badge']}
             </span>
         </div>
-        <h1 style="font-weight: 800; font-size: 2.1rem; margin: 0 0 10px 0;">
+        <h1 style="font-weight: 800; font-size: 2.1rem; margin: 0 0 10px 0; color: #FFFFFF;">
             {T['hero_title']}
         </h1>
-        <p style="font-size: 0.98rem; line-height: 1.6; margin: 0;">
+        <p style="font-size: 0.98rem; line-height: 1.6; margin: 0; color: #FFFFFF;">
             {T['hero_desc']}
         </p>
     </div>
@@ -246,8 +342,13 @@ def show_home():
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button(T['btn_start_chat'], use_container_width=True, type="primary"):
-            st.switch_page("pages/1_Chat.py")
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button(T['btn_start_chat'], use_container_width=True, type="primary"):
+                st.switch_page("pages/1_Chat.py")
+        with col_btn2:
+            if st.button("👥 " + T.get('about_team', 'عن الفريق'), use_container_width=True):
+                st.switch_page("pages/0_About.py")
 
     with col_side:
         st.markdown(f"### {T['features_title']}")
