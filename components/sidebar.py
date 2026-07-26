@@ -7,6 +7,7 @@ from pathlib import Path
 TRANSLATIONS = {
     "ar": {
         "home": "الصفحة الرئيسية",
+        "about": "👥 عن الفريق",
         "chat": "المساعد الذكي",
         "docs": "المستندات",
         "analytics": "التحليلات",
@@ -22,6 +23,7 @@ TRANSLATIONS = {
     },
     "en": {
         "home": "Home",
+        "about": "👥 About Team",
         "chat": "AI Assistant",
         "docs": "Documents",
         "analytics": "Analytics",
@@ -42,19 +44,34 @@ TRANSLATIONS = {
 # ============================================================
 def apply_dynamic_theme():
     """تطبيق الثيم (فاتح/داكن) مع ضبط تباين الألوان لكافة العناصر والبطاقات"""
-    if st.session_state.get("dark_mode", True):
-        # 🌙 الوضع الداكن (Dark Mode)
+    if st.session_state.get("dark_mode", False):
+        # 🌙 الوضع الداكن (Dark Mode) - مع لمسات Barbie
         st.markdown("""
         <style>
-            /* خلفية التطبيق والسايدبار */
-            .stApp { background-color: #0B0F19 !important; color: #F8FAFC !important; }
-            [data-testid="stSidebar"] { background-color: #111827 !important; border-right: 1px solid rgba(255, 255, 255, 0.08) !important; }
-            [data-testid="stSidebar"] * { color: #CBD5E1 !important; }
+            /* 🎨 Barbie Dark Mode */
+            :root {
+                --bg-primary: #2D1B2E;
+                --bg-secondary: #1A0F1B;
+                --primary: #E0218A;
+                --primary-dark: #C2185B;
+                --text-primary: #FCE4EC;
+                --text-secondary: #F8BBD0;
+            }
+            
+            /* خلفية التطبيق */
+            .stApp { background-color: #2D1B2E !important; color: #FCE4EC !important; }
+            
+            /* خلفية السايدبار */
+            [data-testid="stSidebar"] { 
+                background-color: #1A0F1B !important; 
+                border-right: 2px solid #E0218A !important; 
+            }
+            [data-testid="stSidebar"] * { color: #FCE4EC !important; }
             
             /* الهيدر والبانر الرئيسي */
             .doc-header, .chat-header, .hero-banner {
-                background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%) !important;
-                border: 1px solid rgba(99, 102, 241, 0.3) !important;
+                background: linear-gradient(135deg, #2D1B2E 0%, #1A0F1B 100%) !important;
+                border: 2px solid #E0218A !important;
                 color: #FFFFFF !important;
             }
             .doc-header h2, .doc-header p, .chat-header h2, .chat-header p, .hero-banner h1, .hero-banner p { 
@@ -63,84 +80,136 @@ def apply_dynamic_theme():
 
             /* بطاقات الإحصائيات والكروت */
             .metric-card, .doc-card, div[data-testid="stMetric"] {
-                background-color: #1E293B !important;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                background-color: #2D1B2E !important;
+                border: 2px solid #E0218A !important;
                 border-radius: 12px !important;
                 padding: 12px !important;
+                box-shadow: 0 4px 15px rgba(224, 33, 138, 0.2);
             }
-            div[data-testid="stMetricValue"] { color: #38BDF8 !important; }
-            div[data-testid="stMetricLabel"] { color: #94A3B8 !important; }
+            div[data-testid="stMetricValue"] { color: #E0218A !important; }
+            div[data-testid="stMetricLabel"] { color: #F8BBD0 !important; }
 
             /* المدخلات والقوائم المنسدلة */
             .stTextInput input, div[data-baseweb="select"] > div {
-                background-color: #182232 !important;
-                color: #FFFFFF !important;
-                border-color: rgba(255, 255, 255, 0.1) !important;
+                background-color: #2D1B2E !important;
+                color: #FCE4EC !important;
+                border: 2px solid #E0218A !important;
+                border-radius: 10px !important;
+            }
+            .stTextInput input:focus, div[data-baseweb="select"] > div:focus {
+                border-color: #C2185B !important;
+                box-shadow: 0 0 0 3px rgba(224, 33, 138, 0.3);
             }
             
             /* الأزرار العامة */
             .stButton > button {
-                background-color: #1E293B !important;
-                color: #F8FAFC !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                background: linear-gradient(135deg, #E0218A 0%, #C2185B 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
+                border-radius: 12px !important;
+                font-weight: 700 !important;
+                box-shadow: 0 4px 15px rgba(224, 33, 138, 0.3);
             }
             .stButton > button:hover {
-                border-color: #38BDF8 !important;
-                color: #38BDF8 !important;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 30px rgba(224, 33, 138, 0.4);
+            }
+            
+            /* العناوين والنصوص الإضافية */
+            h1, h2, h3, h4, h5, h6, p, span, label, div {
+                color: #FCE4EC;
+            }
+            
+            /* روابط */
+            a {
+                color: #E0218A !important;
+            }
+            a:hover {
+                color: #F8BBD0 !important;
             }
         </style>
         """, unsafe_allow_html=True)
     else:
-        # ☀️ الوضع الفاتح (Light Mode - إبراز كافة النصوص والبطاقات)
+        # ☀️ الوضع الفاتح (Light Mode - Barbie Colors)
         st.markdown("""
         <style>
-            /* خلفية التطبيق والسايدبار */
-            .stApp { background-color: #F8FAFC !important; color: #0F172A !important; }
-            [data-testid="stSidebar"] { background-color: #FFFFFF !important; border-right: 1px solid #E2E8F0 !important; }
-            [data-testid="stSidebar"] * { color: #334155 !important; }
+            /* 🎨 Barbie Light Mode */
+            :root {
+                --bg-primary: #FCE4EC;
+                --bg-secondary: #FFFFFF;
+                --primary: #E0218A;
+                --primary-dark: #C2185B;
+                --text-primary: #4A0E2E;
+                --text-secondary: #C2185B;
+            }
+            
+            /* خلفية التطبيق */
+            .stApp { background-color: #FCE4EC !important; color: #4A0E2E !important; }
+            
+            /* خلفية السايدبار */
+            [data-testid="stSidebar"] { 
+                background-color: #FFFFFF !important; 
+                border-right: 2px solid #E0218A !important; 
+            }
+            [data-testid="stSidebar"] * { color: #4A0E2E !important; }
 
             /* الهيدر والبانر الرئيسي */
             .doc-header, .chat-header, .hero-banner {
-                background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%) !important;
-                border: 1px solid #C7D2FE !important;
-                color: #1E1B4B !important;
+                background: linear-gradient(135deg, #FCE4EC 0%, #E0218A 100%) !important;
+                border: 2px solid #C2185B !important;
+                color: #FFFFFF !important;
             }
-            .doc-header h2, .chat-header h2, .hero-banner h1 { color: #1E1B4B !important; }
-            .doc-header p, .chat-header p, .hero-banner p { color: #3730A3 !important; }
+            .doc-header h2, .chat-header h2, .hero-banner h1 { color: #FFFFFF !important; }
+            .doc-header p, .chat-header p, .hero-banner p { color: #FFFFFF !important; }
 
             /* بطاقات الإحصائيات والكروت */
             .metric-card, .doc-card, div[data-testid="stMetric"] {
                 background-color: #FFFFFF !important;
-                border: 1px solid #E2E8F0 !important;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03) !important;
+                border: 2px solid #E0218A !important;
                 border-radius: 12px !important;
                 padding: 12px !important;
+                box-shadow: 0 4px 15px rgba(224, 33, 138, 0.1);
             }
-            div[data-testid="stMetricValue"] { color: #0284C7 !important; }
-            div[data-testid="stMetricLabel"] { color: #64748B !important; }
+            div[data-testid="stMetricValue"] { color: #E0218A !important; }
+            div[data-testid="stMetricLabel"] { color: #4A0E2E !important; }
 
             /* المدخلات والقوائم المنسدلة */
             .stTextInput input, div[data-baseweb="select"] > div {
                 background-color: #FFFFFF !important;
-                color: #0F172A !important;
-                border-color: #CBD5E1 !important;
+                color: #4A0E2E !important;
+                border: 2px solid #E0218A !important;
+                border-radius: 10px !important;
+            }
+            .stTextInput input:focus, div[data-baseweb="select"] > div:focus {
+                border-color: #C2185B !important;
+                box-shadow: 0 0 0 3px rgba(224, 33, 138, 0.2);
             }
 
             /* الأزرار العامة */
             .stButton > button {
-                background-color: #FFFFFF !important;
-                color: #1E293B !important;
-                border: 1px solid #CBD5E1 !important;
+                background: linear-gradient(135deg, #E0218A 0%, #C2185B 100%) !important;
+                color: #FFFFFF !important;
+                border: none !important;
+                border-radius: 12px !important;
+                font-weight: 700 !important;
+                box-shadow: 0 4px 15px rgba(224, 33, 138, 0.3);
             }
             .stButton > button:hover {
-                background-color: #F1F5F9 !important;
-                border-color: #0284C7 !important;
-                color: #0284C7 !important;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 30px rgba(224, 33, 138, 0.4);
             }
 
             /* العناوين والنصوص الإضافية */
             h1, h2, h3, h4, h5, h6, p, span, label, div {
-                color: #0F172A;
+                color: #4A0E2E;
+            }
+            
+            /* روابط */
+            a {
+                color: #E0218A !important;
+            }
+            a:hover {
+                color: #C2185B !important;
             }
         </style>
         """, unsafe_allow_html=True)
@@ -153,7 +222,7 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
     
     # 1. تهيئة حالة الجلسة للثيم واللغة
     if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = True
+        st.session_state.dark_mode = False  # ✅ وضع فاتح افتراضياً مع Barbie Colors
     if "lang" not in st.session_state:
         st.session_state.lang = "ar"
 
@@ -168,8 +237,8 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
         # 🏷️ الهوية واللوجو
         st.markdown(f"""
         <div style="text-align: center; padding: 10px 0 15px 0;">
-            <h2 style="margin: 0; font-weight: 800; font-size: 1.4rem;">🧠 SmartRetriever</h2>
-            <span style="font-size: 0.75rem; color: #94A3B8;">{T['brand_subtitle']}</span>
+            <h2 style="margin: 0; font-weight: 800; font-size: 1.4rem; color: #E0218A;">🧠 SmartRetriever</h2>
+            <span style="font-size: 0.75rem; color: #C2185B;">{T['brand_subtitle']}</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -178,6 +247,7 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
         # 🔀 التنقل الفوري بين الصفحات
         if show_navigation:
             st.page_link("app.py", label=T["home"], icon="🏠")
+            st.page_link("pages/0_About.py", label=T["about"], icon="👥")
             st.page_link("pages/1_Chat.py", label=T["chat"], icon="💬")
             st.page_link("pages/2_Documents.py", label=T["docs"], icon="📁")
             st.page_link("pages/3_Analytics.py", label=T["analytics"], icon="📊")
@@ -212,8 +282,8 @@ def render_sidebar(stats=None, show_theme_toggle=True, show_stats=True, show_nav
         st.markdown("""
         <div style="font-size: 0.75rem; text-align: center; opacity: 0.7;">
             📦 AutoData · 2024-2026<br>
-            <a href="https://github.com" target="_blank" style="color: #38BDF8; text-decoration: none;">GitHub</a> | 
-            <a href="https://linkedin.com" target="_blank" style="color: #38BDF8; text-decoration: none;">LinkedIn</a>
+            <a href="https://github.com" target="_blank" style="color: #E0218A; text-decoration: none;">GitHub</a> | 
+            <a href="https://linkedin.com" target="_blank" style="color: #E0218A; text-decoration: none;">LinkedIn</a>
         </div>
         """, unsafe_allow_html=True)
 
