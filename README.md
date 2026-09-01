@@ -221,6 +221,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 ### ⭐ If this project helped you, consider giving it a star!
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:764ba2,100:667eea&height=120&section=footer" width="100%"/>
+<sub>Made with ❤️ by **Goda Emad**, **Ganna Emad** & **Manar Harby** — for smarter procurement decisions</sub>
 
 
 </div>
